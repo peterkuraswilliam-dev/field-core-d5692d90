@@ -19,6 +19,14 @@ import { toast } from "sonner";
 import { isCurrentUserAdmin } from "@/lib/roles";
 import { roleLabel, type Workspace, type Membership, type WorkspaceRole } from "@/lib/workspace";
 import { fetchAuditLog, humanAction, type AuditEntry } from "@/lib/team";
+import {
+  canCreateProjects,
+  fetchProjects,
+  hasWorkspaceWideAccess,
+  NEEDS_ATTENTION_STATUSES,
+  statusLabel,
+  type ProjectListItem,
+} from "@/lib/projects";
 
 export const Route = createFileRoute("/_authenticated/control-centre")({
   head: () => ({
