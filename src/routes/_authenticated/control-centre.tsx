@@ -114,6 +114,17 @@ function ControlCentre() {
       setCounts({ active: active ?? 0, pending, suspended: suspended ?? 0 });
     })();
 
+    fetchProjects(workspace.id)
+      .then(setProjects)
+      .catch(() => setProjects([]));
+
+    supabase
+      .from("project_members")
+      .select("project_id")
+      .eq("workspace_id", workspace.id)
+      .eq("user_id", user.id)
+      .then(({ data }) => setMyProjectIds(new Set((data ?? []).map((r) => r.project_id))));
+
     isCurrentUserAdmin(user.id).then(setIsPlatformAdmin);
   }, [user.id, workspace.id, canManageTeam]);
 
