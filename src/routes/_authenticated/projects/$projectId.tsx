@@ -36,6 +36,9 @@ import {
 } from "@/lib/projects";
 import { fetchTeamMembers, type TeamMember } from "@/lib/team";
 import { roleLabel, type Membership, type Workspace, type WorkspaceRole } from "@/lib/workspace";
+import { TasksTab } from "@/components/project-tabs/TasksTab";
+import { NotesTab } from "@/components/project-tabs/NotesTab";
+import { ActivityTab } from "@/components/project-tabs/ActivityTab";
 
 export const Route = createFileRoute("/_authenticated/projects/$projectId")({
   ssr: false,
@@ -207,7 +210,28 @@ function ProjectDetail() {
             />
           )}
 
-          {tab !== "overview" && tab !== "team" && <Placeholder tab={tab} />}
+          {tab === "tasks" && (
+            <TasksTab
+              projectId={project.id}
+              currentUserId={user.id}
+              members={members}
+              canManage={canManage}
+              isViewer={role === "viewer"}
+            />
+          )}
+
+          {tab === "notes" && (
+            <NotesTab
+              projectId={project.id}
+              currentUserId={user.id}
+              role={role}
+              canManage={canManage}
+            />
+          )}
+
+          {tab === "activity" && <ActivityTab projectId={project.id} />}
+
+          {(tab === "photos" || tab === "files" || tab === "calendar") && <Placeholder tab={tab} />}
         </div>
       </div>
 

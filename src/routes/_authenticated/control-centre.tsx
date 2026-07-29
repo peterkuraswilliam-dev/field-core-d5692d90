@@ -1,7 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
+  CheckCircle2,
   FolderKanban,
+  ListChecks,
   LogOut,
   Settings,
   ShieldCheck,
@@ -24,6 +26,12 @@ import {
   statusLabel,
   type ProjectListItem,
 } from "@/lib/projects";
+import {
+  fetchWorkspaceTaskStats,
+  taskStatusLabel,
+  type TaskWithAssignee,
+} from "@/lib/tasks";
+import { fetchWorkspaceActivity, humanActivity, type ActivityEntry } from "@/lib/activity";
 
 export const Route = createFileRoute("/_authenticated/control-centre")({
   head: () => ({
@@ -70,6 +78,13 @@ function ControlCentre() {
   const [signingOut, setSigningOut] = useState(false);
   const [projects, setProjects] = useState<ProjectListItem[] | null>(null);
   const [myProjectIds, setMyProjectIds] = useState<Set<string>>(new Set());
+  const [taskStats, setTaskStats] = useState<{
+    dueToday: number;
+    overdue: number;
+    mine: number;
+    recentCompleted: TaskWithAssignee[];
+  } | null>(null);
+  const [projectFeed, setProjectFeed] = useState<ActivityEntry[]>([]);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -121,6 +136,14 @@ function ControlCentre() {
       .eq("workspace_id", workspace.id)
       .eq("user_id", user.id)
       .then(({ data }) => setMyProjectIds(new Set((data ?? []).map((r) => r.project_id))));
+
+    fetchWorkspaceTaskStats(workspace.id, user.id)
+      .then(setTaskStats)
+      .catch(() => setTaskStats({ dueToday: 0, overdue: 0, mine: 0, recentCompleted: [] }));
+
+    fetchWorkspaceActivity(workspace.id, 5)
+      .then(setProjectFeed)
+      .catch(() => setProjectFeed([]));
 
     isCurrentUserAdmin(user.id).then(setIsPlatformAdmin);
   }, [user.id, workspace.id, canManageTeam]);
@@ -213,6 +236,29 @@ function ControlCentre() {
           myProjectIds={myProjectIds}
         />
 
+        <TasksSummary stats={taskStats} />
+
+        {projectFeed.length > 0 && (
+          <section className="mt-6">
+            <h2 className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">
+              Recent project activity
+            </h2>
+            <ul className="space-y-2">
+              {projectFeed.map((a) => (
+                <li key={a.id} className="rounded-xl border border-border bg-surface p-3 text-sm">
+                  <div className="text-foreground">
+                    <span className="font-semibold">{a.actor_name ?? "Someone"}</span>{" "}
+                    <span className="text-muted-foreground">{humanActivity(a.action)}</span>
+                  </div>
+                  <div className="mt-0.5 text-[11px] text-muted-foreground">
+                    {new Date(a.created_at).toLocaleString()}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
         {canManageTeam && audit.length > 0 && (
           <section className="mt-6">
             <h2 className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">
@@ -266,6 +312,44 @@ function StatCard({ label, value }: { label: string; value: number }) {
       <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
       <div className="mt-1 text-xl font-semibold text-foreground">{value}</div>
     </div>
+  );
+}
+
+function TasksSummary({
+  stats,
+}: {
+  stats: { dueToday: number; overdue: number; mine: number; recentCompleted: TaskWithAssignee[] } | null;
+}) {
+  return (
+    <section className="mt-6 space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xs uppercase tracking-widest text-muted-foreground">Tasks</h2>
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        <StatCard label="Due today" value={stats?.dueToday ?? 0} />
+        <StatCard label="Overdue" value={stats?.overdue ?? 0} />
+        <StatCard label="Assigned to me" value={stats?.mine ?? 0} />
+      </div>
+      {stats && stats.recentCompleted.length > 0 && (
+        <div className="rounded-2xl border border-border bg-surface p-4">
+          <div className="mb-2 flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
+            <CheckCircle2 size={12} /> Recently completed
+          </div>
+          <ul className="space-y-2">
+            {stats.recentCompleted.map((t) => (
+              <li key={t.id} className="flex items-center justify-between gap-2 text-sm">
+                <span className="min-w-0 truncate text-foreground">{t.title}</span>
+                <span className="shrink-0 text-[10px] text-muted-foreground">
+                  {t.completed_at
+                    ? new Date(t.completed_at).toLocaleDateString()
+                    : taskStatusLabel(t.status)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </section>
   );
 }
 
