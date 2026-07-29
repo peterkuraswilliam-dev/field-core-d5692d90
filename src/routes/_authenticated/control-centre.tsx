@@ -1,7 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
+  CheckCircle2,
   FolderKanban,
+  ListChecks,
   LogOut,
   Settings,
   ShieldCheck,
@@ -24,6 +26,12 @@ import {
   statusLabel,
   type ProjectListItem,
 } from "@/lib/projects";
+import {
+  fetchWorkspaceTaskStats,
+  taskStatusLabel,
+  type TaskWithAssignee,
+} from "@/lib/tasks";
+import { fetchWorkspaceActivity, humanActivity, type ActivityEntry } from "@/lib/activity";
 
 export const Route = createFileRoute("/_authenticated/control-centre")({
   head: () => ({
@@ -70,6 +78,13 @@ function ControlCentre() {
   const [signingOut, setSigningOut] = useState(false);
   const [projects, setProjects] = useState<ProjectListItem[] | null>(null);
   const [myProjectIds, setMyProjectIds] = useState<Set<string>>(new Set());
+  const [taskStats, setTaskStats] = useState<{
+    dueToday: number;
+    overdue: number;
+    mine: number;
+    recentCompleted: TaskWithAssignee[];
+  } | null>(null);
+  const [projectFeed, setProjectFeed] = useState<ActivityEntry[]>([]);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -121,6 +136,14 @@ function ControlCentre() {
       .eq("workspace_id", workspace.id)
       .eq("user_id", user.id)
       .then(({ data }) => setMyProjectIds(new Set((data ?? []).map((r) => r.project_id))));
+
+    fetchWorkspaceTaskStats(workspace.id, user.id)
+      .then(setTaskStats)
+      .catch(() => setTaskStats({ dueToday: 0, overdue: 0, mine: 0, recentCompleted: [] }));
+
+    fetchWorkspaceActivity(workspace.id, 5)
+      .then(setProjectFeed)
+      .catch(() => setProjectFeed([]));
 
     isCurrentUserAdmin(user.id).then(setIsPlatformAdmin);
   }, [user.id, workspace.id, canManageTeam]);
