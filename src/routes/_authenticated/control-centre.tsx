@@ -390,8 +390,8 @@ function BottomNav() {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">
       <div className="mx-auto flex w-full max-w-md items-end justify-between px-4 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2">
-        <NavBtn label="Home" Icon={Home} active />
-        <NavBtn label="Projects" Icon={FolderKanban} />
+        <NavBtn label="Home" Icon={Home} active to="/control-centre" />
+        <NavBtn label="Projects" Icon={FolderKanban} to="/projects" />
         <button
           aria-label="Camera"
           className="-mt-6 flex h-16 w-16 items-center justify-center rounded-full bg-gold text-gold-foreground shadow-[0_12px_30px_-8px_oklch(0.78_0.14_82/0.6)] active:scale-95"
