@@ -315,6 +315,44 @@ function StatCard({ label, value }: { label: string; value: number }) {
   );
 }
 
+function TasksSummary({
+  stats,
+}: {
+  stats: { dueToday: number; overdue: number; mine: number; recentCompleted: TaskWithAssignee[] } | null;
+}) {
+  return (
+    <section className="mt-6 space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xs uppercase tracking-widest text-muted-foreground">Tasks</h2>
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        <StatCard label="Due today" value={stats?.dueToday ?? 0} />
+        <StatCard label="Overdue" value={stats?.overdue ?? 0} />
+        <StatCard label="Assigned to me" value={stats?.mine ?? 0} />
+      </div>
+      {stats && stats.recentCompleted.length > 0 && (
+        <div className="rounded-2xl border border-border bg-surface p-4">
+          <div className="mb-2 flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
+            <CheckCircle2 size={12} /> Recently completed
+          </div>
+          <ul className="space-y-2">
+            {stats.recentCompleted.map((t) => (
+              <li key={t.id} className="flex items-center justify-between gap-2 text-sm">
+                <span className="min-w-0 truncate text-foreground">{t.title}</span>
+                <span className="shrink-0 text-[10px] text-muted-foreground">
+                  {t.completed_at
+                    ? new Date(t.completed_at).toLocaleDateString()
+                    : taskStatusLabel(t.status)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function ProjectsSummary({
   projects,
   wideAccess,
