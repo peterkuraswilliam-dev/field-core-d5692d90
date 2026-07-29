@@ -68,11 +68,110 @@ export type Database = {
         }
         Relationships: []
       }
+      workspace_members: {
+        Row: {
+          created_at: string
+          id: string
+          joined_at: string
+          role: Database["public"]["Enums"]["workspace_role"]
+          status: Database["public"]["Enums"]["membership_status"]
+          updated_at: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          joined_at?: string
+          role?: Database["public"]["Enums"]["workspace_role"]
+          status?: Database["public"]["Enums"]["membership_status"]
+          updated_at?: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          joined_at?: string
+          role?: Database["public"]["Enums"]["workspace_role"]
+          status?: Database["public"]["Enums"]["membership_status"]
+          updated_at?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_members_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspaces: {
+        Row: {
+          business_email: string | null
+          business_type: string | null
+          country: string
+          created_at: string
+          created_by: string
+          id: string
+          logo_url: string | null
+          name: string
+          onboarding_completed: boolean
+          phone: string | null
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          business_email?: string | null
+          business_type?: string | null
+          country?: string
+          created_at?: string
+          created_by: string
+          id?: string
+          logo_url?: string | null
+          name: string
+          onboarding_completed?: boolean
+          phone?: string | null
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          business_email?: string | null
+          business_type?: string | null
+          country?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          logo_url?: string | null
+          name?: string
+          onboarding_completed?: boolean
+          phone?: string | null
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      create_workspace_with_owner: {
+        Args: {
+          _business_email: string
+          _business_type: string
+          _country: string
+          _logo_url: string
+          _name: string
+          _owner_full_name: string
+          _phone: string
+          _timezone: string
+        }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -80,9 +179,24 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_active_workspace_member: {
+        Args: { _user_id: string; _workspace_id: string }
+        Returns: boolean
+      }
+      is_workspace_owner: {
+        Args: { _user_id: string; _workspace_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      membership_status: "active" | "suspended" | "removed"
+      workspace_role:
+        | "owner"
+        | "admin"
+        | "project_manager"
+        | "contractor"
+        | "viewer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -211,6 +325,14 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      membership_status: ["active", "suspended", "removed"],
+      workspace_role: [
+        "owner",
+        "admin",
+        "project_manager",
+        "contractor",
+        "viewer",
+      ],
     },
   },
 } as const
