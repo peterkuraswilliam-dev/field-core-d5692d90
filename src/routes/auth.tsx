@@ -25,11 +25,25 @@ export const Route = createFileRoute("/auth")({
     ],
   }),
   beforeLoad: async () => {
-    const access = await getAuthAccess();
-    if (access.status === "authenticated") throw redirect({ to: "/control-centre" });
+    const { data } = await supabase.auth.getSession();
+    if (data.session) throw redirect({ to: "/control-centre" });
   },
+  pendingComponent: AuthRouteLoading,
   component: AuthPage,
 });
+
+function AuthRouteLoading() {
+  return (
+    <AuthShell>
+      <BrandLogo />
+      <div className="mt-10">
+        <div className="h-9 w-48 animate-pulse rounded-lg bg-surface" />
+        <div className="mt-3 h-4 w-64 max-w-full animate-pulse rounded bg-surface" />
+      </div>
+      <div className="mt-8 h-64 animate-pulse rounded-2xl border border-border bg-surface" />
+    </AuthShell>
+  );
+}
 
 function AuthPage() {
   const { mode, reason } = useSearch({ from: "/auth" });

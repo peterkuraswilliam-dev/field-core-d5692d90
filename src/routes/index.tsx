@@ -1,11 +1,11 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { getAuthAccess } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
   ssr: false,
   beforeLoad: async () => {
-    const access = await getAuthAccess();
-    if (access.status !== "authenticated") throw redirect({ to: "/auth" });
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) throw redirect({ to: "/auth" });
     throw redirect({ to: "/control-centre" });
   },
   component: () => null,
