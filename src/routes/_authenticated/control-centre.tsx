@@ -273,13 +273,82 @@ function StatCard({ label, value }: { label: string; value: number }) {
   );
 }
 
-function PlaceholderCard({ label, value, hint }: { label: string; value: string; hint: string }) {
+function ProjectsSummary({
+  projects,
+  wideAccess,
+  canCreate,
+  myProjectIds,
+}: {
+  projects: ProjectListItem[] | null;
+  wideAccess: boolean;
+  canCreate: boolean;
+  myProjectIds: Set<string>;
+}) {
+  const list = projects ?? [];
+  const visible = wideAccess ? list : list.filter((p) => myProjectIds.has(p.id));
+  const active = visible.filter(
+    (p) => p.status !== "completed" && p.status !== "cancelled",
+  ).length;
+  const attention = visible.filter((p) => NEEDS_ATTENTION_STATUSES.includes(p.status)).length;
+  const mine = list.filter((p) => myProjectIds.has(p.id)).length;
+  const recent = [...visible].slice(0, 3);
+
   return (
-    <div className="rounded-2xl border border-border bg-surface p-4">
-      <div className="text-xs uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div className="mt-2 text-2xl font-semibold text-foreground">{value}</div>
-      <div className="mt-1 text-[11px] text-muted-foreground">{hint}</div>
-    </div>
+    <section className="mt-6 space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xs uppercase tracking-widest text-muted-foreground">Projects</h2>
+        <Link to="/projects" className="text-xs font-medium text-gold hover:underline">
+          View all →
+        </Link>
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        <StatCard label="Active" value={active} />
+        <StatCard label="Needs attention" value={attention} />
+        <StatCard label="Assigned to me" value={mine} />
+      </div>
+      {canCreate && (
+        <Link
+          to="/projects/new"
+          className="flex items-center justify-between rounded-2xl border border-gold/30 bg-gold/10 p-4 text-sm text-foreground"
+        >
+          <span className="inline-flex items-center gap-2 font-medium">
+            <FolderKanban size={16} className="text-gold" /> Create a project
+          </span>
+          <span className="text-gold">→</span>
+        </Link>
+      )}
+      {projects === null && (
+        <div className="rounded-2xl border border-border bg-surface p-4 text-sm text-muted-foreground">
+          Loading projects…
+        </div>
+      )}
+      {projects !== null && recent.length === 0 && (
+        <div className="rounded-2xl border border-dashed border-border bg-surface/60 p-4 text-sm text-muted-foreground">
+          No projects yet.
+        </div>
+      )}
+      <ul className="space-y-2">
+        {recent.map((p) => (
+          <li key={p.id}>
+            <Link
+              to="/projects/$projectId"
+              params={{ projectId: p.id }}
+              className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-3 hover:border-gold/40 hover:bg-surface-elevated"
+            >
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-semibold text-foreground">{p.name}</div>
+                <div className="truncate text-[11px] text-muted-foreground">
+                  {p.customer_name ?? "No customer"} · {statusLabel(p.status)}
+                </div>
+              </div>
+              <span className="text-[10px] text-muted-foreground">
+                {new Date(p.updated_at).toLocaleDateString()}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
