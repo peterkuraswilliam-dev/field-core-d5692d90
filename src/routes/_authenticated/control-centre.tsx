@@ -1,6 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Home, FolderKanban, Camera, Calendar, MoreHorizontal, LogOut } from "lucide-react";
+import { useState } from "react";
+import {
+  Home,
+  FolderKanban,
+  Camera,
+  Calendar,
+  MoreHorizontal,
+  LogOut,
+  ShieldCheck,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/auth-ui";
@@ -28,20 +36,10 @@ function initials(name?: string | null, email?: string | null) {
 }
 
 function ControlCentre() {
-  const { user } = Route.useRouteContext();
-  const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
+  const { user, profile } = Route.useRouteContext();
   const [signingOut, setSigningOut] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    supabase
-      .from("profiles")
-      .select("full_name, avatar_url")
-      .eq("id", user.id)
-      .maybeSingle()
-      .then(({ data }) => setProfile(data));
-  }, [user.id]);
 
   const name =
     profile?.full_name ||
@@ -55,9 +53,14 @@ function ControlCentre() {
     setSigningOut(true);
     await queryClient.cancelQueries();
     queryClient.clear();
-    await supabase.auth.signOut();
-    toast.success("Signed out");
-    navigate({ to: "/auth", replace: true });
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error("We couldn't sign you out. Please try again.");
+      setSigningOut(false);
+      return;
+    }
+    toast.success("Signed out securely");
+    navigate({ to: "/auth", search: { reason: "signed-out" }, replace: true });
   };
 
   return (
@@ -79,6 +82,11 @@ function ControlCentre() {
           <Avatar name={name} email={user.email} avatarUrl={profile?.avatar_url} />
         </header>
 
+        <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-semibold capitalize text-gold">
+          {profile.role === "admin" && <ShieldCheck size={13} />}
+          {profile.role}
+        </div>
+
         <section className="mt-8 rounded-2xl border border-border bg-surface p-6">
           <div className="flex items-start gap-3">
             <div className="mt-1 h-2.5 w-2.5 rounded-full bg-gold shadow-[0_0_20px_2px_oklch(0.78_0.14_82/0.6)]" />
@@ -87,12 +95,35 @@ function ControlCentre() {
                 Your contractor workspace will appear here
               </h2>
               <p className="mt-1.5 text-sm text-muted-foreground">
-                Projects, calendar, photos and your team will land in Control Centre as we roll
-                out the next stages.
+                Projects, calendar, photos and your team will land in Control Centre as we roll out
+                the next stages.
               </p>
             </div>
           </div>
         </section>
+
+        {profile.role === "admin" && (
+          <section className="mt-4 rounded-2xl border border-gold/35 bg-gradient-to-br from-gold/10 to-surface p-5">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gold text-gold-foreground">
+                <ShieldCheck size={20} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 className="font-semibold text-foreground">Admin controls</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Admin controls will appear here.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate({ to: "/admin" })}
+                className="min-h-10 rounded-xl border border-gold/30 px-3 text-sm font-semibold text-gold transition hover:bg-gold/10"
+              >
+                Admin
+              </button>
+            </div>
+          </section>
+        )}
 
         <section className="mt-4 grid grid-cols-2 gap-3">
           {[

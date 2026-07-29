@@ -4,12 +4,14 @@ import { z } from "zod";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { isCurrentUserAdmin } from "@/lib/roles";
-import { lovable } from "@/integrations/lovable";
+import { authErrorMessage, getAuthAccess } from "@/lib/auth";
 import { AuthShell, Button, Divider, Field, GoogleButton } from "@/components/auth-ui";
 import { BrandLogo } from "@/components/brand-logo";
 
-const authSearch = z.object({ mode: z.enum(["signin", "signup"]).optional() });
+const authSearch = z.object({
+  mode: z.enum(["signin", "signup"]).optional(),
+  reason: z.enum(["inactive", "profile", "signed-out"]).optional(),
+});
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -23,17 +25,14 @@ export const Route = createFileRoute("/auth")({
     ],
   }),
   beforeLoad: async () => {
-    const { data } = await supabase.auth.getSession();
-    if (data.session) {
-      const admin = await isCurrentUserAdmin(data.session.user.id);
-      throw redirect({ to: admin ? "/admin" : "/control-centre" });
-    }
+    const access = await getAuthAccess();
+    if (access.status === "authenticated") throw redirect({ to: "/control-centre" });
   },
   component: AuthPage,
 });
 
 function AuthPage() {
-  const { mode } = useSearch({ from: "/auth" });
+  const { mode, reason } = useSearch({ from: "/auth" });
   const [tab, setTab] = useState<"signin" | "signup">(mode ?? "signin");
 
   return (
@@ -69,29 +68,44 @@ function AuthPage() {
         ))}
       </div>
 
-      <div className="mt-6">{tab === "signin" ? <SignInForm /> : <SignUpForm onSwitch={() => setTab("signin")} />}</div>
+      {reason && (
+        <div
+          role="alert"
+          className="mt-5 rounded-xl border border-border bg-surface px-4 py-3 text-sm text-muted-foreground"
+        >
+          {reason === "inactive"
+            ? "This account is inactive. Contact an administrator for access."
+            : reason === "profile"
+              ? "Your account is signed in, but its secure profile could not be loaded. Please try again."
+              : "You have been signed out securely."}
+        </div>
+      )}
+
+      <div className="mt-6">
+        {tab === "signin" ? <SignInForm /> : <SignUpForm onSwitch={() => setTab("signin")} />}
+      </div>
     </AuthShell>
   );
 }
 
 function useGoogle() {
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
   const go = async () => {
     setLoading(true);
     try {
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/control-centre`,
+          queryParams: { access_type: "offline", prompt: "consent" },
+        },
       });
-      if (result.error) {
-        toast.error("Google sign-in failed. Please try again.");
+      if (error) {
+        toast.error(authErrorMessage(error) || "Google sign-in failed. Please try again.");
         setLoading(false);
-        return;
       }
-      if (result.redirected) return;
-      navigate({ to: "/" });
     } catch {
-      toast.error("Google sign-in failed. Please try again.");
+      toast.error("Google sign-in failed. Check your connection and try again.");
       setLoading(false);
     }
   };
@@ -123,19 +137,28 @@ function SignInForm() {
     }
     setErrors({});
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email: parsed.data.email,
+      password: parsed.data.password,
+    });
     setLoading(false);
     if (error) {
-      const msg = /invalid/i.test(error.message)
-        ? "Invalid email or password."
-        : /network/i.test(error.message)
-          ? "Network error. Check your connection."
-          : error.message;
-      toast.error(msg);
+      toast.error(authErrorMessage(error));
       return;
     }
-    toast.success("Signed in");
-    navigate({ to: "/" });
+    const access = await getAuthAccess();
+    if (access.status === "inactive") {
+      await supabase.auth.signOut();
+      navigate({ to: "/auth", search: { reason: "inactive" }, replace: true });
+      return;
+    }
+    if (access.status !== "authenticated") {
+      await supabase.auth.signOut();
+      navigate({ to: "/auth", search: { reason: "profile" }, replace: true });
+      return;
+    }
+    toast.success("Signed in securely");
+    navigate({ to: "/control-centre", replace: true });
   };
 
   return (
@@ -244,19 +267,16 @@ function SignUpForm({ onSwitch }: { onSwitch: () => void }) {
     setErrors({});
     setLoading(true);
     const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
+      email: parsed.data.email,
+      password: parsed.data.password,
       options: {
         emailRedirectTo: `${window.location.origin}/`,
-        data: { full_name: fullName },
+        data: { full_name: parsed.data.fullName },
       },
     });
     setLoading(false);
     if (error) {
-      const msg = /already/i.test(error.message)
-        ? "That email is already registered."
-        : error.message;
-      toast.error(msg);
+      toast.error(authErrorMessage(error));
       return;
     }
     if (data.user && !data.session) {
