@@ -64,9 +64,40 @@ export function roleLabel(role: WorkspaceRole): string {
       return "Admin";
     case "project_manager":
       return "Project Manager";
+    case "field_worker":
+      return "Field Worker";
     case "contractor":
       return "Contractor";
     case "viewer":
       return "Viewer";
+    default:
+      return role;
   }
+}
+
+export const INVITABLE_ROLES: WorkspaceRole[] = [
+  "admin",
+  "project_manager",
+  "field_worker",
+  "contractor",
+  "viewer",
+];
+
+export function canManage(actor: WorkspaceRole, target: WorkspaceRole): boolean {
+  if (actor === "owner") return target !== "owner";
+  if (actor === "admin")
+    return (
+      target === "project_manager" ||
+      target === "field_worker" ||
+      target === "contractor" ||
+      target === "viewer"
+    );
+  return false;
+}
+
+export function allowedRolesFor(actor: WorkspaceRole): WorkspaceRole[] {
+  if (actor === "owner") return INVITABLE_ROLES;
+  if (actor === "admin")
+    return ["project_manager", "field_worker", "contractor", "viewer"];
+  return [];
 }

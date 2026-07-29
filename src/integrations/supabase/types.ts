@@ -68,6 +68,103 @@ export type Database = {
         }
         Relationships: []
       }
+      workspace_audit_log: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          created_at: string
+          id: string
+          metadata: Json
+          target_email: string | null
+          target_user_id: string | null
+          workspace_id: string
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          target_email?: string | null
+          target_user_id?: string | null
+          workspace_id: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          target_email?: string | null
+          target_user_id?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_audit_log_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace_invitations: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          message: string | null
+          role: Database["public"]["Enums"]["workspace_role"]
+          status: Database["public"]["Enums"]["invitation_status"]
+          token_hash: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by: string
+          message?: string | null
+          role: Database["public"]["Enums"]["workspace_role"]
+          status?: Database["public"]["Enums"]["invitation_status"]
+          token_hash: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          message?: string | null
+          role?: Database["public"]["Enums"]["workspace_role"]
+          status?: Database["public"]["Enums"]["invitation_status"]
+          token_hash?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_invitations_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspace_members: {
         Row: {
           created_at: string
@@ -159,6 +256,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_workspace_invitation: { Args: { _token: string }; Returns: string }
+      can_manage_workspace_role: {
+        Args: { _actor: string; _target: string }
+        Returns: boolean
+      }
+      cancel_workspace_invitation: {
+        Args: { _invitation_id: string }
+        Returns: undefined
+      }
       create_workspace_with_owner: {
         Args: {
           _business_email: string
@@ -179,6 +285,18 @@ export type Database = {
         }
         Returns: boolean
       }
+      invite_workspace_member: {
+        Args: {
+          _email: string
+          _message: string
+          _role: string
+          _workspace_id: string
+        }
+        Returns: {
+          invitation_id: string
+          token: string
+        }[]
+      }
       is_active_workspace_member: {
         Args: { _user_id: string; _workspace_id: string }
         Returns: boolean
@@ -187,9 +305,38 @@ export type Database = {
         Args: { _user_id: string; _workspace_id: string }
         Returns: boolean
       }
+      preview_workspace_invitation: {
+        Args: { _token: string }
+        Returns: {
+          email: string
+          expires_at: string
+          invitation_id: string
+          role: string
+          status: string
+          workspace_id: string
+          workspace_name: string
+        }[]
+      }
+      resend_workspace_invitation: {
+        Args: { _invitation_id: string }
+        Returns: string
+      }
+      set_workspace_member_status: {
+        Args: { _member_id: string; _status: string }
+        Returns: undefined
+      }
+      update_workspace_member_role: {
+        Args: { _member_id: string; _new_role: string }
+        Returns: undefined
+      }
+      workspace_role_of: {
+        Args: { _user_id: string; _workspace_id: string }
+        Returns: string
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      invitation_status: "pending" | "accepted" | "cancelled" | "expired"
       membership_status: "active" | "suspended" | "removed"
       workspace_role:
         | "owner"
@@ -197,6 +344,7 @@ export type Database = {
         | "project_manager"
         | "contractor"
         | "viewer"
+        | "field_worker"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -325,6 +473,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      invitation_status: ["pending", "accepted", "cancelled", "expired"],
       membership_status: ["active", "suspended", "removed"],
       workspace_role: [
         "owner",
@@ -332,6 +481,7 @@ export const Constants = {
         "project_manager",
         "contractor",
         "viewer",
+        "field_worker",
       ],
     },
   },
