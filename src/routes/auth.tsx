@@ -247,7 +247,7 @@ function SignUpForm({ onSwitch }: { onSwitch: () => void }) {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/control-centre`,
+        emailRedirectTo: `${window.location.origin}/`,
         data: { full_name: fullName },
       },
     });
@@ -264,7 +264,7 @@ function SignUpForm({ onSwitch }: { onSwitch: () => void }) {
       toast.success("Verification email sent");
     } else {
       toast.success("Account created");
-      window.location.href = "/control-centre";
+      window.location.href = "/";
     }
   };
 
