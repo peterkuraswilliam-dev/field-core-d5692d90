@@ -26,7 +26,7 @@ export async function getAuthAccess(): Promise<AuthAccess> {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, full_name, email, avatar_url, role, is_active, created_at, updated_at")
+    .select("id, full_name, email, avatar_url, is_active, created_at, updated_at")
     .eq("id", userData.user.id)
     .maybeSingle();
 
@@ -38,7 +38,21 @@ export async function getAuthAccess(): Promise<AuthAccess> {
     };
   }
 
-  const profile = data as Profile;
+  const { data: roles, error: rolesError } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userData.user.id);
+
+  if (rolesError) {
+    return {
+      status: "profile-error",
+      user: userData.user,
+      message: rolesError.message,
+    };
+  }
+
+  const role: AppRole = roles?.some(({ role }) => role === "admin") ? "admin" : "user";
+  const profile = { ...data, role } as Profile;
   if (!profile.is_active) return { status: "inactive", user: userData.user, profile };
   return { status: "authenticated", user: userData.user, profile };
 }
