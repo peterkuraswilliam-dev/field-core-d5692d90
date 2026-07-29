@@ -209,10 +209,12 @@ function ControlCentre() {
           </Link>
         )}
 
-        <section className="mt-4 grid grid-cols-2 gap-3">
-          <PlaceholderCard label="Active projects" value="—" hint="Coming soon" />
-          <PlaceholderCard label="Today's schedule" value="—" hint="Coming soon" />
-        </section>
+        <ProjectsSummary
+          projects={projects}
+          wideAccess={wideAccess}
+          canCreate={canCreate}
+          myProjectIds={myProjectIds}
+        />
 
         {canManageTeam && audit.length > 0 && (
           <section className="mt-6">
