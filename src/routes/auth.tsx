@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 import { Eye, EyeOff } from "lucide-react";
@@ -23,10 +23,7 @@ export const Route = createFileRoute("/auth")({
   }),
   beforeLoad: async () => {
     const { data } = await supabase.auth.getSession();
-    if (data.session) {
-      const { redirect } = await import("@tanstack/react-router");
-      throw redirect({ to: "/control-centre" });
-    }
+    if (data.session) throw redirect({ to: "/control-centre" });
   },
   component: AuthPage,
 });
