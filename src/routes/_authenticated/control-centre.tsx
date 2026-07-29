@@ -1,17 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
-  Home,
   FolderKanban,
-  Camera,
-  Calendar,
-  MoreHorizontal,
   LogOut,
   Settings,
   ShieldCheck,
   Users,
   UserPlus,
 } from "lucide-react";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/auth-ui";
