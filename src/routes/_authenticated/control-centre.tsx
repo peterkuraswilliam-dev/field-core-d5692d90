@@ -63,12 +63,16 @@ function ControlCentre() {
   const { user, workspace, membership } = ctx;
   const role = membership.role as WorkspaceRole;
   const canManageTeam = role === "owner" || role === "admin";
+  const canCreate = canCreateProjects(role);
+  const wideAccess = hasWorkspaceWideAccess(role);
 
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
   const [counts, setCounts] = useState<Counts>({ active: 0, pending: 0, suspended: 0 });
   const [audit, setAudit] = useState<AuditEntry[]>([]);
   const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [projects, setProjects] = useState<ProjectListItem[] | null>(null);
+  const [myProjectIds, setMyProjectIds] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
