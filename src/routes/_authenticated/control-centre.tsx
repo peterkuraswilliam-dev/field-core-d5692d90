@@ -19,6 +19,14 @@ import { toast } from "sonner";
 import { isCurrentUserAdmin } from "@/lib/roles";
 import { roleLabel, type Workspace, type Membership, type WorkspaceRole } from "@/lib/workspace";
 import { fetchAuditLog, humanAction, type AuditEntry } from "@/lib/team";
+import {
+  canCreateProjects,
+  fetchProjects,
+  hasWorkspaceWideAccess,
+  NEEDS_ATTENTION_STATUSES,
+  statusLabel,
+  type ProjectListItem,
+} from "@/lib/projects";
 
 export const Route = createFileRoute("/_authenticated/control-centre")({
   head: () => ({
@@ -55,12 +63,16 @@ function ControlCentre() {
   const { user, workspace, membership } = ctx;
   const role = membership.role as WorkspaceRole;
   const canManageTeam = role === "owner" || role === "admin";
+  const canCreate = canCreateProjects(role);
+  const wideAccess = hasWorkspaceWideAccess(role);
 
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
   const [counts, setCounts] = useState<Counts>({ active: 0, pending: 0, suspended: 0 });
   const [audit, setAudit] = useState<AuditEntry[]>([]);
   const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [projects, setProjects] = useState<ProjectListItem[] | null>(null);
+  const [myProjectIds, setMyProjectIds] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -101,6 +113,17 @@ function ControlCentre() {
       }
       setCounts({ active: active ?? 0, pending, suspended: suspended ?? 0 });
     })();
+
+    fetchProjects(workspace.id)
+      .then(setProjects)
+      .catch(() => setProjects([]));
+
+    supabase
+      .from("project_members")
+      .select("project_id")
+      .eq("workspace_id", workspace.id)
+      .eq("user_id", user.id)
+      .then(({ data }) => setMyProjectIds(new Set((data ?? []).map((r) => r.project_id))));
 
     isCurrentUserAdmin(user.id).then(setIsPlatformAdmin);
   }, [user.id, workspace.id, canManageTeam]);
@@ -186,10 +209,12 @@ function ControlCentre() {
           </Link>
         )}
 
-        <section className="mt-4 grid grid-cols-2 gap-3">
-          <PlaceholderCard label="Active projects" value="—" hint="Coming soon" />
-          <PlaceholderCard label="Today's schedule" value="—" hint="Coming soon" />
-        </section>
+        <ProjectsSummary
+          projects={projects}
+          wideAccess={wideAccess}
+          canCreate={canCreate}
+          myProjectIds={myProjectIds}
+        />
 
         {canManageTeam && audit.length > 0 && (
           <section className="mt-6">
@@ -248,13 +273,82 @@ function StatCard({ label, value }: { label: string; value: number }) {
   );
 }
 
-function PlaceholderCard({ label, value, hint }: { label: string; value: string; hint: string }) {
+function ProjectsSummary({
+  projects,
+  wideAccess,
+  canCreate,
+  myProjectIds,
+}: {
+  projects: ProjectListItem[] | null;
+  wideAccess: boolean;
+  canCreate: boolean;
+  myProjectIds: Set<string>;
+}) {
+  const list = projects ?? [];
+  const visible = wideAccess ? list : list.filter((p) => myProjectIds.has(p.id));
+  const active = visible.filter(
+    (p) => p.status !== "completed" && p.status !== "cancelled",
+  ).length;
+  const attention = visible.filter((p) => NEEDS_ATTENTION_STATUSES.includes(p.status)).length;
+  const mine = list.filter((p) => myProjectIds.has(p.id)).length;
+  const recent = [...visible].slice(0, 3);
+
   return (
-    <div className="rounded-2xl border border-border bg-surface p-4">
-      <div className="text-xs uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div className="mt-2 text-2xl font-semibold text-foreground">{value}</div>
-      <div className="mt-1 text-[11px] text-muted-foreground">{hint}</div>
-    </div>
+    <section className="mt-6 space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xs uppercase tracking-widest text-muted-foreground">Projects</h2>
+        <Link to="/projects" className="text-xs font-medium text-gold hover:underline">
+          View all →
+        </Link>
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        <StatCard label="Active" value={active} />
+        <StatCard label="Needs attention" value={attention} />
+        <StatCard label="Assigned to me" value={mine} />
+      </div>
+      {canCreate && (
+        <Link
+          to="/projects/new"
+          className="flex items-center justify-between rounded-2xl border border-gold/30 bg-gold/10 p-4 text-sm text-foreground"
+        >
+          <span className="inline-flex items-center gap-2 font-medium">
+            <FolderKanban size={16} className="text-gold" /> Create a project
+          </span>
+          <span className="text-gold">→</span>
+        </Link>
+      )}
+      {projects === null && (
+        <div className="rounded-2xl border border-border bg-surface p-4 text-sm text-muted-foreground">
+          Loading projects…
+        </div>
+      )}
+      {projects !== null && recent.length === 0 && (
+        <div className="rounded-2xl border border-dashed border-border bg-surface/60 p-4 text-sm text-muted-foreground">
+          No projects yet.
+        </div>
+      )}
+      <ul className="space-y-2">
+        {recent.map((p) => (
+          <li key={p.id}>
+            <Link
+              to="/projects/$projectId"
+              params={{ projectId: p.id }}
+              className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-3 hover:border-gold/40 hover:bg-surface-elevated"
+            >
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-semibold text-foreground">{p.name}</div>
+                <div className="truncate text-[11px] text-muted-foreground">
+                  {p.customer_name ?? "No customer"} · {statusLabel(p.status)}
+                </div>
+              </div>
+              <span className="text-[10px] text-muted-foreground">
+                {new Date(p.updated_at).toLocaleDateString()}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -296,8 +390,8 @@ function BottomNav() {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">
       <div className="mx-auto flex w-full max-w-md items-end justify-between px-4 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2">
-        <NavBtn label="Home" Icon={Home} active />
-        <NavBtn label="Projects" Icon={FolderKanban} />
+        <NavBtn label="Home" Icon={Home} active to="/control-centre" />
+        <NavBtn label="Projects" Icon={FolderKanban} to="/projects" />
         <button
           aria-label="Camera"
           className="-mt-6 flex h-16 w-16 items-center justify-center rounded-full bg-gold text-gold-foreground shadow-[0_12px_30px_-8px_oklch(0.78_0.14_82/0.6)] active:scale-95"
