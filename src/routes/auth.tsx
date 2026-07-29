@@ -1,5 +1,5 @@
-import { createFileRoute, Link, redirect, useNavigate, useSearch } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
@@ -23,30 +23,25 @@ export const Route = createFileRoute("/auth")({
       { property: "og:description", content: "Sign in to manage your projects and team." },
     ],
   }),
-  beforeLoad: async () => {
-    const { data } = await supabase.auth.getSession();
-    if (data.session) throw redirect({ to: "/control-centre" });
-  },
-  pendingComponent: AuthRouteLoading,
   component: AuthPage,
 });
-
-function AuthRouteLoading() {
-  return (
-    <AuthShell>
-      <BrandLogo />
-      <div className="mt-10">
-        <div className="h-9 w-48 animate-pulse rounded-lg bg-surface" />
-        <div className="mt-3 h-4 w-64 max-w-full animate-pulse rounded bg-surface" />
-      </div>
-      <div className="mt-8 h-64 animate-pulse rounded-2xl border border-border bg-surface" />
-    </AuthShell>
-  );
-}
 
 function AuthPage() {
   const { mode, reason } = useSearch({ from: "/auth" });
   const [tab, setTab] = useState<"signin" | "signup">(mode ?? "signin");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    let active = true;
+    void supabase.auth.getSession().then(({ data }) => {
+      if (active && data.session) {
+        navigate({ to: "/control-centre", replace: true });
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [navigate]);
 
   return (
     <AuthShell>
