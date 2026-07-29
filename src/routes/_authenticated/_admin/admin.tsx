@@ -67,7 +67,7 @@ function AdminDashboard() {
                 You have full administrator access
               </h2>
               <p className="mt-1.5 text-sm text-muted-foreground">
-                This surface is protected by database-level Row Level Security and a server-verified
+                This surface is protected by database-level Row Level Security and a server-checked
                 role guard. Regular users cannot reach it.
               </p>
             </div>

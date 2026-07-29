@@ -1,18 +1,12 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import {
-  Home,
-  FolderKanban,
-  Camera,
-  Calendar,
-  MoreHorizontal,
-  LogOut,
-  ShieldCheck,
-} from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { Home, FolderKanban, Camera, Calendar, MoreHorizontal, LogOut, Settings, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/auth-ui";
 import { toast } from "sonner";
+import { isCurrentUserAdmin } from "@/lib/roles";
+import { roleLabel, type Workspace, type Membership } from "@/lib/workspace";
 
 export const Route = createFileRoute("/_authenticated/control-centre")({
   head: () => ({
@@ -26,8 +20,7 @@ export const Route = createFileRoute("/_authenticated/control-centre")({
   component: ControlCentre,
 });
 
-function initials(name?: string | null, email?: string | null) {
-  const source = name?.trim() || email?.split("@")[0] || "?";
+function initials(source: string) {
   return source
     .split(/\s+/)
     .slice(0, 2)
@@ -36,31 +29,46 @@ function initials(name?: string | null, email?: string | null) {
 }
 
 function ControlCentre() {
-  const { user, profile } = Route.useRouteContext();
+  const ctx = Route.useRouteContext() as {
+    user: { id: string; email?: string | null; user_metadata?: Record<string, unknown> };
+    workspace: Workspace;
+    membership: Membership;
+  };
+  const { user, workspace, membership } = ctx;
+  const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
+  const [memberCount, setMemberCount] = useState<number | null>(null);
+  const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const name =
-    profile?.full_name ||
-    (user.user_metadata as { full_name?: string; name?: string })?.full_name ||
-    (user.user_metadata as { name?: string })?.name ||
-    user.email?.split("@")[0] ||
-    "there";
+  useEffect(() => {
+    supabase
+      .from("profiles")
+      .select("full_name, avatar_url")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => setProfile(data));
+    supabase
+      .from("workspace_members")
+      .select("id", { count: "exact", head: true })
+      .eq("workspace_id", workspace.id)
+      .eq("status", "active")
+      .then(({ count }) => setMemberCount(count ?? null));
+    isCurrentUserAdmin(user.id).then(setIsPlatformAdmin);
+  }, [user.id, workspace.id]);
+
+  const meta = (user.user_metadata ?? {}) as { full_name?: string; name?: string };
+  const name = profile?.full_name || meta.full_name || meta.name || user.email?.split("@")[0] || "there";
   const firstName = name.split(" ")[0];
 
   const signOut = async () => {
     setSigningOut(true);
     await queryClient.cancelQueries();
     queryClient.clear();
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast.error("We couldn't sign you out. Please try again.");
-      setSigningOut(false);
-      return;
-    }
-    toast.success("Signed out securely");
-    navigate({ to: "/auth", search: { reason: "signed-out" }, replace: true });
+    await supabase.auth.signOut();
+    toast.success("Signed out");
+    navigate({ to: "/auth", replace: true });
   };
 
   return (
@@ -71,72 +79,52 @@ function ControlCentre() {
       />
       <div className="relative mx-auto w-full max-w-md px-5 pt-8 sm:pt-12">
         <header className="flex items-center justify-between">
-          <div>
+          <div className="min-w-0">
             <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
               Control Centre
             </div>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+            <h1 className="mt-1 truncate text-2xl font-semibold tracking-tight">
               Welcome back, {firstName}
             </h1>
           </div>
-          <Avatar name={name} email={user.email} avatarUrl={profile?.avatar_url} />
+          <Avatar name={name} avatarUrl={profile?.avatar_url} />
         </header>
 
-        <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-semibold capitalize text-gold">
-          {profile.role === "admin" && <ShieldCheck size={13} />}
-          {profile.role}
-        </div>
-
-        <section className="mt-8 rounded-2xl border border-border bg-surface p-6">
-          <div className="flex items-start gap-3">
-            <div className="mt-1 h-2.5 w-2.5 rounded-full bg-gold shadow-[0_0_20px_2px_oklch(0.78_0.14_82/0.6)]" />
-            <div>
-              <h2 className="text-lg font-semibold text-foreground">
-                Your contractor workspace will appear here
-              </h2>
-              <p className="mt-1.5 text-sm text-muted-foreground">
-                Projects, calendar, photos and your team will land in Control Centre as we roll out
-                the next stages.
-              </p>
+        <section className="mt-6 rounded-2xl border border-border bg-surface p-5">
+          <div className="flex items-center gap-4">
+            <BusinessMark workspace={workspace} />
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-lg font-semibold text-foreground">{workspace.name}</div>
+              <div className="mt-0.5 truncate text-xs text-muted-foreground">
+                {workspace.business_type || "Contracting business"} · {workspace.country}
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                <Badge tone="gold">{roleLabel(membership.role)}</Badge>
+                {isPlatformAdmin && (
+                  <Badge tone="outline">
+                    <ShieldCheck size={12} className="mr-1" /> Platform Admin
+                  </Badge>
+                )}
+                <Badge tone="muted">Setup complete</Badge>
+              </div>
             </div>
+          </div>
+          <div className="mt-4 flex items-center justify-between border-t border-border pt-4 text-sm">
+            <div className="text-muted-foreground">
+              Team members: <span className="text-foreground">{memberCount ?? "—"}</span>
+            </div>
+            <Link
+              to="/workspace-settings"
+              className="inline-flex items-center gap-1 text-sm font-medium text-gold hover:underline"
+            >
+              <Settings size={14} /> Settings
+            </Link>
           </div>
         </section>
 
-        {profile.role === "admin" && (
-          <section className="mt-4 rounded-2xl border border-gold/35 bg-gradient-to-br from-gold/10 to-surface p-5">
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gold text-gold-foreground">
-                <ShieldCheck size={20} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h2 className="font-semibold text-foreground">Admin controls</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Admin controls will appear here.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => navigate({ to: "/admin" })}
-                className="min-h-10 rounded-xl border border-gold/30 px-3 text-sm font-semibold text-gold transition hover:bg-gold/10"
-              >
-                Admin
-              </button>
-            </div>
-          </section>
-        )}
-
         <section className="mt-4 grid grid-cols-2 gap-3">
-          {[
-            { label: "Active projects", value: "—" },
-            { label: "This week", value: "—" },
-          ].map((s) => (
-            <div key={s.label} className="rounded-2xl border border-border bg-surface p-4">
-              <div className="text-xs uppercase tracking-widest text-muted-foreground">
-                {s.label}
-              </div>
-              <div className="mt-2 text-2xl font-semibold text-foreground">{s.value}</div>
-            </div>
-          ))}
+          <PlaceholderCard label="Active projects" value="—" hint="Coming soon" />
+          <PlaceholderCard label="Today's schedule" value="—" hint="Coming soon" />
         </section>
 
         <div className="mt-8">
@@ -152,15 +140,48 @@ function ControlCentre() {
   );
 }
 
-function Avatar({
-  name,
-  email,
-  avatarUrl,
-}: {
-  name: string;
-  email?: string | null;
-  avatarUrl?: string | null;
-}) {
+function Badge({ children, tone }: { children: React.ReactNode; tone: "gold" | "outline" | "muted" }) {
+  const cls =
+    tone === "gold"
+      ? "bg-gold text-gold-foreground"
+      : tone === "outline"
+        ? "border border-gold/40 text-gold"
+        : "bg-surface-elevated text-muted-foreground";
+  return (
+    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${cls}`}>
+      {children}
+    </span>
+  );
+}
+
+function PlaceholderCard({ label, value, hint }: { label: string; value: string; hint: string }) {
+  return (
+    <div className="rounded-2xl border border-border bg-surface p-4">
+      <div className="text-xs uppercase tracking-widest text-muted-foreground">{label}</div>
+      <div className="mt-2 text-2xl font-semibold text-foreground">{value}</div>
+      <div className="mt-1 text-[11px] text-muted-foreground">{hint}</div>
+    </div>
+  );
+}
+
+function BusinessMark({ workspace }: { workspace: Workspace }) {
+  if (workspace.logo_url) {
+    return (
+      <img
+        src={workspace.logo_url}
+        alt={workspace.name}
+        className="h-14 w-14 shrink-0 rounded-xl border border-border object-cover"
+      />
+    );
+  }
+  return (
+    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gold text-lg font-semibold text-gold-foreground">
+      {initials(workspace.name)}
+    </div>
+  );
+}
+
+function Avatar({ name, avatarUrl }: { name: string; avatarUrl?: string | null }) {
   if (avatarUrl) {
     return (
       <img
@@ -172,7 +193,7 @@ function Avatar({
   }
   return (
     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gold text-base font-semibold text-gold-foreground">
-      {initials(name, email)}
+      {initials(name)}
     </div>
   );
 }

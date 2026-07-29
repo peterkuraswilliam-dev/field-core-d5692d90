@@ -1,19 +1,18 @@
-import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute, Link, redirect, useNavigate, useSearch } from "@tanstack/react-router";
+import { useState } from "react";
 import { z } from "zod";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { authErrorMessage, getAuthAccess } from "@/lib/auth";
+import { isCurrentUserAdmin } from "@/lib/roles";
+import { lovable } from "@/integrations/lovable";
 import { AuthShell, Button, Divider, Field, GoogleButton } from "@/components/auth-ui";
 import { BrandLogo } from "@/components/brand-logo";
 
-const authSearch = z.object({
-  mode: z.enum(["signin", "signup"]).optional(),
-  reason: z.enum(["inactive", "profile", "signed-out"]).optional(),
-});
+const authSearch = z.object({ mode: z.enum(["signin", "signup"]).optional() });
 
 export const Route = createFileRoute("/auth")({
+  ssr: false,
   validateSearch: authSearch,
   head: () => ({
     meta: [
@@ -23,25 +22,19 @@ export const Route = createFileRoute("/auth")({
       { property: "og:description", content: "Sign in to manage your projects and team." },
     ],
   }),
+  beforeLoad: async () => {
+    const { data } = await supabase.auth.getSession();
+    if (data.session) {
+      const admin = await isCurrentUserAdmin(data.session.user.id);
+      throw redirect({ to: admin ? "/admin" : "/control-centre" });
+    }
+  },
   component: AuthPage,
 });
 
 function AuthPage() {
-  const { mode, reason } = useSearch({ from: "/auth" });
+  const { mode } = useSearch({ from: "/auth" });
   const [tab, setTab] = useState<"signin" | "signup">(mode ?? "signin");
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    let active = true;
-    void supabase.auth.getSession().then(({ data }) => {
-      if (active && data.session) {
-        navigate({ to: "/control-centre", replace: true });
-      }
-    });
-    return () => {
-      active = false;
-    };
-  }, [navigate]);
 
   return (
     <AuthShell>
@@ -76,44 +69,29 @@ function AuthPage() {
         ))}
       </div>
 
-      {reason && (
-        <div
-          role="alert"
-          className="mt-5 rounded-xl border border-border bg-surface px-4 py-3 text-sm text-muted-foreground"
-        >
-          {reason === "inactive"
-            ? "This account is inactive. Contact an administrator for access."
-            : reason === "profile"
-              ? "Your account is signed in, but its secure profile could not be loaded. Please try again."
-              : "You have been signed out securely."}
-        </div>
-      )}
-
-      <div className="mt-6">
-        {tab === "signin" ? <SignInForm /> : <SignUpForm onSwitch={() => setTab("signin")} />}
-      </div>
+      <div className="mt-6">{tab === "signin" ? <SignInForm /> : <SignUpForm onSwitch={() => setTab("signin")} />}</div>
     </AuthShell>
   );
 }
 
 function useGoogle() {
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
   const go = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/control-centre`,
-          queryParams: { access_type: "offline", prompt: "consent" },
-        },
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
       });
-      if (error) {
-        toast.error(authErrorMessage(error) || "Google sign-in failed. Please try again.");
+      if (result.error) {
+        toast.error("Google sign-in failed. Please try again.");
         setLoading(false);
+        return;
       }
+      if (result.redirected) return;
+      navigate({ to: "/" });
     } catch {
-      toast.error("Google sign-in failed. Check your connection and try again.");
+      toast.error("Google sign-in failed. Please try again.");
       setLoading(false);
     }
   };
@@ -145,28 +123,19 @@ function SignInForm() {
     }
     setErrors({});
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: parsed.data.email,
-      password: parsed.data.password,
-    });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) {
-      toast.error(authErrorMessage(error));
+      const msg = /invalid/i.test(error.message)
+        ? "Invalid email or password."
+        : /network/i.test(error.message)
+          ? "Network error. Check your connection."
+          : error.message;
+      toast.error(msg);
       return;
     }
-    const access = await getAuthAccess();
-    if (access.status === "inactive") {
-      await supabase.auth.signOut();
-      navigate({ to: "/auth", search: { reason: "inactive" }, replace: true });
-      return;
-    }
-    if (access.status !== "authenticated") {
-      await supabase.auth.signOut();
-      navigate({ to: "/auth", search: { reason: "profile" }, replace: true });
-      return;
-    }
-    toast.success("Signed in securely");
-    navigate({ to: "/control-centre", replace: true });
+    toast.success("Signed in");
+    navigate({ to: "/" });
   };
 
   return (
@@ -275,16 +244,19 @@ function SignUpForm({ onSwitch }: { onSwitch: () => void }) {
     setErrors({});
     setLoading(true);
     const { data, error } = await supabase.auth.signUp({
-      email: parsed.data.email,
-      password: parsed.data.password,
+      email,
+      password,
       options: {
         emailRedirectTo: `${window.location.origin}/`,
-        data: { full_name: parsed.data.fullName },
+        data: { full_name: fullName },
       },
     });
     setLoading(false);
     if (error) {
-      toast.error(authErrorMessage(error));
+      const msg = /already/i.test(error.message)
+        ? "That email is already registered."
+        : error.message;
+      toast.error(msg);
       return;
     }
     if (data.user && !data.session) {
