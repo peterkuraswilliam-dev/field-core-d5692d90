@@ -244,11 +244,10 @@ function ControlCentre() {
           </Button>
         </div>
       </div>
-
-      <BottomNav />
     </div>
   );
 }
+
 
 function Badge({ children, tone }: { children: React.ReactNode; tone: "gold" | "outline" | "muted" }) {
   const cls =
