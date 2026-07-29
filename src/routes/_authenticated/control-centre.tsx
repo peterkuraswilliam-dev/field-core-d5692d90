@@ -142,7 +142,7 @@ function ControlCentre() {
   };
 
   return (
-    <div className="relative min-h-screen bg-background pb-28">
+    <div className="relative min-h-screen bg-background">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(ellipse_at_top,oklch(0.78_0.14_82/0.15),transparent_60%)]"
