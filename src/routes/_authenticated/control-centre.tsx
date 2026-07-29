@@ -236,6 +236,29 @@ function ControlCentre() {
           myProjectIds={myProjectIds}
         />
 
+        <TasksSummary stats={taskStats} />
+
+        {projectFeed.length > 0 && (
+          <section className="mt-6">
+            <h2 className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">
+              Recent project activity
+            </h2>
+            <ul className="space-y-2">
+              {projectFeed.map((a) => (
+                <li key={a.id} className="rounded-xl border border-border bg-surface p-3 text-sm">
+                  <div className="text-foreground">
+                    <span className="font-semibold">{a.actor_name ?? "Someone"}</span>{" "}
+                    <span className="text-muted-foreground">{humanActivity(a.action)}</span>
+                  </div>
+                  <div className="mt-0.5 text-[11px] text-muted-foreground">
+                    {new Date(a.created_at).toLocaleString()}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
         {canManageTeam && audit.length > 0 && (
           <section className="mt-6">
             <h2 className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">
