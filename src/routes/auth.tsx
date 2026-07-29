@@ -4,6 +4,7 @@ import { z } from "zod";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { isCurrentUserAdmin } from "@/lib/roles";
 import { lovable } from "@/integrations/lovable";
 import { AuthShell, Button, Divider, Field, GoogleButton } from "@/components/auth-ui";
 import { BrandLogo } from "@/components/brand-logo";
@@ -23,7 +24,10 @@ export const Route = createFileRoute("/auth")({
   }),
   beforeLoad: async () => {
     const { data } = await supabase.auth.getSession();
-    if (data.session) throw redirect({ to: "/control-centre" });
+    if (data.session) {
+      const admin = await isCurrentUserAdmin(data.session.user.id);
+      throw redirect({ to: admin ? "/admin" : "/control-centre" });
+    }
   },
   component: AuthPage,
 });
