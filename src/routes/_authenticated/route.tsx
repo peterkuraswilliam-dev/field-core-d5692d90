@@ -1,8 +1,10 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { loadMembershipState } from "@/lib/workspace";
+import { BottomNav } from "@/components/bottom-nav";
 
 const WORKSPACE_EXEMPT = ["/admin", "/onboarding", "/blocked"];
+const HIDE_BOTTOM_NAV = ["/onboarding", "/blocked"];
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -20,5 +22,18 @@ export const Route = createFileRoute("/_authenticated")({
     if (state.kind === "blocked") throw redirect({ to: "/blocked" });
     return { user, workspace: state.workspace, membership: state.membership };
   },
-  component: () => <Outlet />,
+  component: AuthenticatedLayout,
 });
+
+function AuthenticatedLayout() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const showNav = !HIDE_BOTTOM_NAV.some((p) => pathname.startsWith(p));
+  return (
+    <>
+      <div className={showNav ? "pb-28" : undefined}>
+        <Outlet />
+      </div>
+      {showNav && <BottomNav />}
+    </>
+  );
+}
