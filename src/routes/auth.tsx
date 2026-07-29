@@ -89,7 +89,7 @@ function useGoogle() {
         return;
       }
       if (result.redirected) return;
-      navigate({ to: "/control-centre" });
+      navigate({ to: "/" });
     } catch {
       toast.error("Google sign-in failed. Please try again.");
       setLoading(false);
@@ -135,7 +135,7 @@ function SignInForm() {
       return;
     }
     toast.success("Signed in");
-    navigate({ to: "/control-centre" });
+    navigate({ to: "/" });
   };
 
   return (
