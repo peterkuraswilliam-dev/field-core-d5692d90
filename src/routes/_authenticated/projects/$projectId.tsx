@@ -39,6 +39,10 @@ import { roleLabel, type Membership, type Workspace, type WorkspaceRole } from "
 import { TasksTab } from "@/components/project-tabs/TasksTab";
 import { NotesTab } from "@/components/project-tabs/NotesTab";
 import { ActivityTab } from "@/components/project-tabs/ActivityTab";
+import { PhotosTab } from "@/components/project-tabs/PhotosTab";
+import { useCamera } from "@/components/camera-provider";
+import { canUploadPhotos, markProjectOpened } from "@/lib/photos";
+
 
 export const Route = createFileRoute("/_authenticated/projects/$projectId")({
   ssr: false,
