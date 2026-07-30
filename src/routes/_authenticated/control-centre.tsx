@@ -145,8 +145,13 @@ function ControlCentre() {
       .then(setProjectFeed)
       .catch(() => setProjectFeed([]));
 
+    fetchPhotoStats(workspace.id)
+      .then(setPhotoStats)
+      .catch(() => setPhotoStats(null));
+
     isCurrentUserAdmin(user.id).then(setIsPlatformAdmin);
-  }, [user.id, workspace.id, canManageTeam]);
+  }, [user.id, workspace.id, canManageTeam, camera.uploadTick]);
+
 
   const meta = (user.user_metadata ?? {}) as { full_name?: string; name?: string };
   const name = profile?.full_name || meta.full_name || meta.name || user.email?.split("@")[0] || "there";
