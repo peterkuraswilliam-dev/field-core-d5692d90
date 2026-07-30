@@ -1,7 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
+  Camera,
   CheckCircle2,
+
   FolderKanban,
   ListChecks,
   LogOut,
