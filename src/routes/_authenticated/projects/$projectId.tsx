@@ -17,6 +17,7 @@ import {
   StickyNote,
   X,
   Plus,
+  TrendingUp,
 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -40,12 +41,19 @@ import { TasksTab } from "@/components/project-tabs/TasksTab";
 import { NotesTab } from "@/components/project-tabs/NotesTab";
 import { ActivityTab } from "@/components/project-tabs/ActivityTab";
 import { PhotosTab } from "@/components/project-tabs/PhotosTab";
+import { ProgressTab } from "@/components/project-tabs/ProgressTab";
 import { useCamera } from "@/components/camera-provider";
 import { canUploadPhotos, markProjectOpened } from "@/lib/photos";
 
 
+const projectSearch = z.object({
+  tab: z.enum(["overview", "tasks", "photos", "progress", "files", "calendar", "notes", "team", "activity"]).optional(),
+  newProgress: z.boolean().optional(),
+});
+
 export const Route = createFileRoute("/_authenticated/projects/$projectId")({
   ssr: false,
+  validateSearch: projectSearch,
   head: () => ({
     meta: [
       { title: "Project — Contractor OS" },
@@ -55,12 +63,13 @@ export const Route = createFileRoute("/_authenticated/projects/$projectId")({
   component: ProjectDetail,
 });
 
-type Tab = "overview" | "tasks" | "photos" | "files" | "calendar" | "notes" | "team" | "activity";
+type Tab = "overview" | "tasks" | "photos" | "progress" | "files" | "calendar" | "notes" | "team" | "activity";
 
 const TABS: { id: Tab; label: string; icon: React.ComponentType<{ size?: number }> }[] = [
   { id: "overview", label: "Overview", icon: Info },
   { id: "tasks", label: "Tasks", icon: ListChecks },
   { id: "photos", label: "Photos", icon: ImageIcon },
+  { id: "progress", label: "Progress", icon: TrendingUp },
   { id: "files", label: "Files", icon: FileText },
   { id: "calendar", label: "Calendar", icon: CalIcon },
   { id: "notes", label: "Notes", icon: StickyNote },
@@ -70,6 +79,7 @@ const TABS: { id: Tab; label: string; icon: React.ComponentType<{ size?: number 
 
 function ProjectDetail() {
   const { projectId } = Route.useParams();
+  const search = Route.useSearch();
   const ctx = Route.useRouteContext() as {
     user: { id: string };
     workspace: Workspace;
@@ -83,7 +93,7 @@ function ProjectDetail() {
 
   const [project, setProject] = useState<Project | null | undefined>(undefined);
   const [members, setMembers] = useState<ProjectMemberRow[]>([]);
-  const [tab, setTab] = useState<Tab>("overview");
+  const [tab, setTab] = useState<Tab>(search.tab ?? "overview");
   const [editing, setEditing] = useState(false);
   const [managingTeam, setManagingTeam] = useState(false);
 
@@ -247,6 +257,18 @@ function ProjectDetail() {
               canUpload={canUploadPhotos(role)}
               onOpenCamera={() => camera.openCamera(project.id)}
               reloadKey={camera.uploadTick}
+            />
+          )}
+
+          {tab === "progress" && (
+            <ProgressTab
+              projectId={project.id}
+              currentUserId={user.id}
+              canManage={canManage}
+              canCreate={role !== "viewer" && (hasWorkspaceWideAccess(role) || isAssigned)}
+              reloadKey={camera.uploadTick}
+              onOpenCamera={() => camera.openCamera(project.id)}
+              startOpen={Boolean(search.newProgress)}
             />
           )}
 

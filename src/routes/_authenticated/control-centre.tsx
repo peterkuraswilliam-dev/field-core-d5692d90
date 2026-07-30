@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import {
   Camera,
   CheckCircle2,
-
+  ClipboardPlus,
   FolderKanban,
   ListChecks,
   LogOut,
@@ -42,6 +42,7 @@ import {
   type PhotoStats,
 } from "@/lib/photos";
 import { useCamera } from "@/components/camera-provider";
+import { fetchProgressStats, type ProgressUpdate } from "@/lib/progress";
 
 
 export const Route = createFileRoute("/_authenticated/control-centre")({
@@ -97,6 +98,11 @@ function ControlCentre() {
   } | null>(null);
   const [projectFeed, setProjectFeed] = useState<ActivityEntry[]>([]);
   const [photoStats, setPhotoStats] = useState<PhotoStats | null>(null);
+  const [progressStats, setProgressStats] = useState<{
+    today: number;
+    withoutRecent: number;
+    recent: ProgressUpdate[];
+  } | null>(null);
   const camera = useCamera();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -165,6 +171,14 @@ function ControlCentre() {
 
     isCurrentUserAdmin(user.id).then(setIsPlatformAdmin);
   }, [user.id, workspace.id, canManageTeam, camera.uploadTick]);
+
+  useEffect(() => {
+    if (!projects) return;
+    const visible = wideAccess ? projects : projects.filter((project) => myProjectIds.has(project.id));
+    fetchProgressStats(workspace.id, visible.map((project) => project.id))
+      .then(setProgressStats)
+      .catch(() => setProgressStats({ today: 0, withoutRecent: 0, recent: [] }));
+  }, [projects, myProjectIds, wideAccess, workspace.id]);
 
 
   const meta = (user.user_metadata ?? {}) as { full_name?: string; name?: string };
@@ -251,6 +265,19 @@ function ControlCentre() {
           </Link>
         )}
 
+        <ProgressSummary
+          projects={(projects ?? []).filter((project) => wideAccess || myProjectIds.has(project.id))}
+          stats={progressStats}
+          canCreate={role !== "viewer"}
+          onStart={(projectId) =>
+            navigate({
+              to: "/projects/$projectId",
+              params: { projectId },
+              search: { tab: "progress", newProgress: true },
+            })
+          }
+        />
+
         <ProjectsSummary
           projects={projects}
           wideAccess={wideAccess}
@@ -318,6 +345,82 @@ function ControlCentre() {
         </div>
       </div>
     </div>
+  );
+}
+
+function ProgressSummary({
+  projects,
+  stats,
+  canCreate,
+  onStart,
+}: {
+  projects: ProjectListItem[];
+  stats: { today: number; withoutRecent: number; recent: ProgressUpdate[] } | null;
+  canCreate: boolean;
+  onStart: (projectId: string) => void;
+}) {
+  const [projectId, setProjectId] = useState("");
+  useEffect(() => {
+    if (!projectId && projects[0]) setProjectId(projects[0].id);
+  }, [projects, projectId]);
+
+  return (
+    <section className="mt-6 space-y-3">
+      <h2 className="text-xs uppercase tracking-widest text-muted-foreground">Daily progress</h2>
+      {canCreate && projects.length > 0 && (
+        <div className="rounded-2xl bg-gradient-to-r from-amber-500 to-gold p-4 text-gold-foreground">
+          <div className="flex items-center gap-3">
+            <span className="flex h-11 w-11 items-center justify-center rounded-full border border-black/15 bg-white/15">
+              <ClipboardPlus size={21} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="font-semibold">Add Progress Update</div>
+              <div className="text-xs opacity-75">Record today’s work on site</div>
+            </div>
+          </div>
+          <div className="mt-3 flex gap-2">
+            <select
+              value={projectId}
+              onChange={(event) => setProjectId(event.target.value)}
+              className="h-11 min-w-0 flex-1 rounded-xl border border-black/15 bg-black/10 px-3 text-sm font-medium"
+              aria-label="Project for progress update"
+            >
+              {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+            </select>
+            <button onClick={() => projectId && onStart(projectId)} className="h-11 rounded-xl bg-background px-4 text-sm font-semibold text-gold">
+              Start
+            </button>
+          </div>
+        </div>
+      )}
+      <div className="grid grid-cols-2 gap-3">
+        <StatCard label="Updates today" value={stats?.today ?? 0} />
+        <StatCard label="No recent update" value={stats?.withoutRecent ?? 0} />
+      </div>
+      {stats && stats.recent.length > 0 && (
+        <div className="rounded-2xl border border-border bg-surface p-4">
+          <div className="mb-3 text-[10px] uppercase tracking-widest text-muted-foreground">Recent progress updates</div>
+          <ul className="space-y-3">
+            {stats.recent.map((update) => (
+              <li key={update.id}>
+                <Link
+                  to="/projects/$projectId"
+                  params={{ projectId: update.project_id }}
+                  search={{ tab: "progress" }}
+                  className="flex items-start justify-between gap-3"
+                >
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-semibold text-foreground">{update.project_name}</div>
+                    <div className="line-clamp-1 text-xs text-muted-foreground">{update.summary}</div>
+                  </div>
+                  <span className="shrink-0 text-[10px] text-muted-foreground">{new Date(update.work_date).toLocaleDateString()}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </section>
   );
 }
 
