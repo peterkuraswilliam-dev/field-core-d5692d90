@@ -237,7 +237,19 @@ function ProjectDetail() {
 
           {tab === "activity" && <ActivityTab projectId={project.id} />}
 
-          {(tab === "photos" || tab === "files" || tab === "calendar") && <Placeholder tab={tab} />}
+          {tab === "photos" && (
+            <PhotosTab
+              projectId={project.id}
+              currentUserId={user.id}
+              canManage={canManage}
+              canUpload={canUploadPhotos(role)}
+              onOpenCamera={() => camera.openCamera(project.id)}
+              reloadKey={camera.uploadTick}
+            />
+          )}
+
+          {(tab === "files" || tab === "calendar") && <Placeholder tab={tab} />}
+
         </div>
       </div>
 
