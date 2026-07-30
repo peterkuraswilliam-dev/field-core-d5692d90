@@ -32,6 +32,15 @@ import {
   type TaskWithAssignee,
 } from "@/lib/tasks";
 import { fetchWorkspaceActivity, humanActivity, type ActivityEntry } from "@/lib/activity";
+import {
+  canUploadPhotos,
+  categoryLabel,
+  categoryTone,
+  fetchPhotoStats,
+  type PhotoStats,
+} from "@/lib/photos";
+import { useCamera } from "@/components/camera-provider";
+
 
 export const Route = createFileRoute("/_authenticated/control-centre")({
   head: () => ({
