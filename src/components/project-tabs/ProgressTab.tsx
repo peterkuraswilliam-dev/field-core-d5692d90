@@ -271,6 +271,7 @@ function ProgressComposer({
 
 function ProgressDetail({
   update,
+  currentUserId,
   canManage,
   onClose,
   onChanged,
