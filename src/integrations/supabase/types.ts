@@ -165,6 +165,62 @@ export type Database = {
           },
         ]
       }
+      project_photos: {
+        Row: {
+          caption: string | null
+          category: Database["public"]["Enums"]["photo_category"]
+          created_at: string
+          file_name: string
+          file_size: number
+          file_type: string
+          id: string
+          project_id: string
+          storage_path: string
+          taken_at: string | null
+          updated_at: string
+          uploaded_by: string
+          workspace_id: string
+        }
+        Insert: {
+          caption?: string | null
+          category?: Database["public"]["Enums"]["photo_category"]
+          created_at?: string
+          file_name: string
+          file_size?: number
+          file_type: string
+          id?: string
+          project_id: string
+          storage_path: string
+          taken_at?: string | null
+          updated_at?: string
+          uploaded_by: string
+          workspace_id: string
+        }
+        Update: {
+          caption?: string | null
+          category?: Database["public"]["Enums"]["photo_category"]
+          created_at?: string
+          file_name?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          project_id?: string
+          storage_path?: string
+          taken_at?: string | null
+          updated_at?: string
+          uploaded_by?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_photos_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_tasks: {
         Row: {
           assigned_to: string | null
@@ -612,6 +668,14 @@ export type Database = {
       app_role: "admin" | "moderator" | "user"
       invitation_status: "pending" | "accepted" | "cancelled" | "expired"
       membership_status: "active" | "suspended" | "removed"
+      photo_category:
+        | "before"
+        | "during"
+        | "after"
+        | "issue"
+        | "materials"
+        | "receipt"
+        | "other"
       project_status:
         | "enquiry"
         | "quote_required"
@@ -761,6 +825,15 @@ export const Constants = {
       app_role: ["admin", "moderator", "user"],
       invitation_status: ["pending", "accepted", "cancelled", "expired"],
       membership_status: ["active", "suspended", "removed"],
+      photo_category: [
+        "before",
+        "during",
+        "after",
+        "issue",
+        "materials",
+        "receipt",
+        "other",
+      ],
       project_status: [
         "enquiry",
         "quote_required",
