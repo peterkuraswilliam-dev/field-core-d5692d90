@@ -82,6 +82,14 @@ function detailFor(
     case "member.assigned":
     case "member.removed":
       return targetName;
+    case "photo.uploaded":
+    case "photo.caption_updated":
+    case "photo.deleted": {
+      const cat = typeof meta.category === "string" ? meta.category : null;
+      const count = typeof meta.count === "number" && meta.count > 1 ? `${meta.count} photos` : null;
+      return [count, cat].filter(Boolean).join(" · ") || null;
+    }
+
     default:
       return null;
   }

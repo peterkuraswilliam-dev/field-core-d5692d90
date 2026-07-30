@@ -1,10 +1,13 @@
 import { createFileRoute, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { loadMembershipState } from "@/lib/workspace";
+import { loadMembershipState, type Membership, type Workspace } from "@/lib/workspace";
 import { BottomNav } from "@/components/bottom-nav";
+import { CameraProvider } from "@/components/camera-provider";
+import { canUploadPhotos } from "@/lib/photos";
 
 const WORKSPACE_EXEMPT = ["/admin", "/onboarding", "/blocked"];
 const HIDE_BOTTOM_NAV = ["/onboarding", "/blocked"];
+
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -27,13 +30,23 @@ export const Route = createFileRoute("/_authenticated")({
 
 function AuthenticatedLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const ctx = Route.useRouteContext() as {
+    user: { id: string } | null;
+    workspace: Workspace | null;
+    membership: Membership | null;
+  };
   const showNav = !HIDE_BOTTOM_NAV.some((p) => pathname.startsWith(p));
   return (
-    <>
+    <CameraProvider
+      workspaceId={ctx.workspace?.id ?? null}
+      userId={ctx.user?.id ?? null}
+      canUpload={ctx.membership ? canUploadPhotos(ctx.membership.role) : false}
+    >
       <div className={showNav ? "pb-28" : undefined}>
         <Outlet />
       </div>
       {showNav && <BottomNav />}
-    </>
+    </CameraProvider>
   );
 }
+

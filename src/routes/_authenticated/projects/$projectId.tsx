@@ -39,6 +39,10 @@ import { roleLabel, type Membership, type Workspace, type WorkspaceRole } from "
 import { TasksTab } from "@/components/project-tabs/TasksTab";
 import { NotesTab } from "@/components/project-tabs/NotesTab";
 import { ActivityTab } from "@/components/project-tabs/ActivityTab";
+import { PhotosTab } from "@/components/project-tabs/PhotosTab";
+import { useCamera } from "@/components/camera-provider";
+import { canUploadPhotos, markProjectOpened } from "@/lib/photos";
+
 
 export const Route = createFileRoute("/_authenticated/projects/$projectId")({
   ssr: false,
@@ -74,6 +78,8 @@ function ProjectDetail() {
   const { user, workspace, membership } = ctx;
   const role = membership.role as WorkspaceRole;
   const navigate = useNavigate();
+  const camera = useCamera();
+
 
   const [project, setProject] = useState<Project | null | undefined>(undefined);
   const [members, setMembers] = useState<ProjectMemberRow[]>([]);
@@ -93,8 +99,10 @@ function ProjectDetail() {
 
   useEffect(() => {
     load();
+    markProjectOpened(projectId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
+
 
   const isAssigned = members.some((m) => m.user_id === user.id);
   const canManage =
@@ -231,7 +239,19 @@ function ProjectDetail() {
 
           {tab === "activity" && <ActivityTab projectId={project.id} />}
 
-          {(tab === "photos" || tab === "files" || tab === "calendar") && <Placeholder tab={tab} />}
+          {tab === "photos" && (
+            <PhotosTab
+              projectId={project.id}
+              currentUserId={user.id}
+              canManage={canManage}
+              canUpload={canUploadPhotos(role)}
+              onOpenCamera={() => camera.openCamera(project.id)}
+              reloadKey={camera.uploadTick}
+            />
+          )}
+
+          {(tab === "files" || tab === "calendar") && <Placeholder tab={tab} />}
+
         </div>
       </div>
 

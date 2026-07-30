@@ -34,6 +34,13 @@ export function humanActivity(action: string): string {
       return "edited a note";
     case "note.deleted":
       return "deleted a note";
+    case "photo.uploaded":
+      return "uploaded a photo";
+    case "photo.caption_updated":
+      return "updated a photo caption";
+    case "photo.deleted":
+      return "deleted a photo";
+
     default:
       return action.replace(/[._]/g, " ");
   }

@@ -1,10 +1,15 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, FolderKanban, Camera, Calendar, Users } from "lucide-react";
+import { useCamera } from "@/components/camera-provider";
 
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { openCamera } = useCamera();
   const isActive = (to: string) =>
     to === "/control-centre" ? pathname === to : pathname.startsWith(to);
+
+  const projectMatch = pathname.match(/^\/projects\/([0-9a-fA-F-]{36})/);
+  const currentProjectId = projectMatch ? projectMatch[1] : null;
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">
@@ -13,6 +18,7 @@ export function BottomNav() {
         <NavBtn label="Projects" Icon={FolderKanban} to="/projects" active={isActive("/projects")} />
         <button
           aria-label="Camera"
+          onClick={() => openCamera(currentProjectId)}
           className="-mt-6 flex h-16 w-16 items-center justify-center rounded-full bg-gold text-gold-foreground shadow-[0_12px_30px_-8px_oklch(0.78_0.14_82/0.6)] active:scale-95"
         >
           <Camera size={26} strokeWidth={2.2} />
@@ -23,6 +29,7 @@ export function BottomNav() {
     </nav>
   );
 }
+
 
 function NavBtn({
   label,
