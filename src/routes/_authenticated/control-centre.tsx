@@ -255,6 +255,14 @@ function ControlCentre() {
 
         <TasksSummary stats={taskStats} />
 
+        <PhotosSummary
+          stats={photoStats}
+          canUpload={canUploadPhotos(role)}
+          prominent={role === "field_worker" || role === "contractor"}
+          onCamera={() => camera.openCamera(null)}
+        />
+
+
         {projectFeed.length > 0 && (
           <section className="mt-6">
             <h2 className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">
