@@ -316,6 +316,98 @@ function ControlCentre() {
   );
 }
 
+function PhotosSummary({
+  stats,
+  canUpload,
+  prominent,
+  onCamera,
+}: {
+  stats: PhotoStats | null;
+  canUpload: boolean;
+  prominent: boolean;
+  onCamera: () => void;
+}) {
+  return (
+    <section className="mt-6">
+      <h2 className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">Photos</h2>
+
+      {canUpload && (
+        <button
+          onClick={onCamera}
+          className={`mb-3 flex w-full items-center justify-between rounded-2xl border px-4 text-sm font-semibold transition active:scale-[0.99] ${
+            prominent
+              ? "h-16 border-gold bg-gold text-gold-foreground"
+              : "h-12 border-gold/30 bg-gold/10 text-foreground"
+          }`}
+        >
+          <span className="inline-flex items-center gap-2">
+            <Camera size={prominent ? 22 : 16} className={prominent ? "" : "text-gold"} />
+            Take or upload a photo
+          </span>
+          <span className={prominent ? "" : "text-gold"}>→</span>
+        </button>
+      )}
+
+      <div className="rounded-2xl border border-border bg-surface p-4">
+        <div className="flex items-baseline justify-between">
+          <span className="text-sm text-muted-foreground">Uploaded today</span>
+          <span className="text-xl font-semibold text-foreground">{stats?.today ?? 0}</span>
+        </div>
+
+        {stats && stats.recent.length > 0 && (
+          <div className="mt-3 grid grid-cols-4 gap-2">
+            {stats.recent.slice(0, 8).map((p) => (
+              <Link
+                key={p.id}
+                to="/projects/$projectId"
+                params={{ projectId: p.project_id }}
+                className="relative aspect-square overflow-hidden rounded-lg border border-border bg-background"
+              >
+                {p.signed_url && (
+                  <img
+                    src={p.signed_url}
+                    alt={p.caption ?? "Project photo"}
+                    loading="lazy"
+                    className="h-full w-full object-cover"
+                  />
+                )}
+                <span
+                  className={`absolute bottom-0.5 left-0.5 rounded-full border px-1 text-[8px] ${categoryTone(p.category)}`}
+                >
+                  {categoryLabel(p.category)}
+                </span>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {stats && stats.recent.length === 0 && (
+          <p className="mt-2 text-xs text-muted-foreground">No photos uploaded yet.</p>
+        )}
+
+        {stats && stats.projectsMissingBefore.length > 0 && (
+          <div className="mt-4 border-t border-border pt-3">
+            <div className="text-xs font-medium text-amber-300">Missing “Before” photos</div>
+            <ul className="mt-1.5 space-y-1">
+              {stats.projectsMissingBefore.map((p) => (
+                <li key={p.id}>
+                  <Link
+                    to="/projects/$projectId"
+                    params={{ projectId: p.id }}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    {p.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 
 function Badge({ children, tone }: { children: React.ReactNode; tone: "gold" | "outline" | "muted" }) {
   const cls =
