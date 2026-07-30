@@ -221,6 +221,175 @@ export type Database = {
           },
         ]
       }
+      project_progress_corrections: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          note: string
+          project_id: string
+          update_id: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          note: string
+          project_id: string
+          update_id: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          note?: string
+          project_id?: string
+          update_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_progress_corrections_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_progress_corrections_update_id_fkey"
+            columns: ["update_id"]
+            isOneToOne: false
+            referencedRelation: "project_progress_updates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_progress_corrections_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_progress_update_photos: {
+        Row: {
+          photo_id: string
+          update_id: string
+        }
+        Insert: {
+          photo_id: string
+          update_id: string
+        }
+        Update: {
+          photo_id?: string
+          update_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_progress_update_photos_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "project_photos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_progress_update_photos_update_id_fkey"
+            columns: ["update_id"]
+            isOneToOne: false
+            referencedRelation: "project_progress_updates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_progress_update_tasks: {
+        Row: {
+          task_id: string
+          update_id: string
+        }
+        Insert: {
+          task_id: string
+          update_id: string
+        }
+        Update: {
+          task_id?: string
+          update_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_progress_update_tasks_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "project_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_progress_update_tasks_update_id_fkey"
+            columns: ["update_id"]
+            isOneToOne: false
+            referencedRelation: "project_progress_updates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_progress_updates: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          issues: string | null
+          lock_logged_at: string | null
+          locked_at: string
+          project_id: string
+          summary: string
+          updated_at: string
+          work_date: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          issues?: string | null
+          lock_logged_at?: string | null
+          locked_at?: string
+          project_id: string
+          summary: string
+          updated_at?: string
+          work_date?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          issues?: string | null
+          lock_logged_at?: string | null
+          locked_at?: string
+          project_id?: string
+          summary?: string
+          updated_at?: string
+          work_date?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_progress_updates_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_progress_updates_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_tasks: {
         Row: {
           assigned_to: string | null
@@ -549,6 +718,10 @@ export type Database = {
     }
     Functions: {
       accept_workspace_invitation: { Args: { _token: string }; Returns: string }
+      add_progress_correction: {
+        Args: { _note: string; _update_id: string }
+        Returns: string
+      }
       can_create_project: {
         Args: { _user_id: string; _workspace_id: string }
         Returns: boolean
@@ -559,6 +732,10 @@ export type Database = {
       }
       can_manage_workspace_role: {
         Args: { _actor: string; _target: string }
+        Returns: boolean
+      }
+      can_submit_progress_update: {
+        Args: { _project_id: string; _user_id: string }
         Returns: boolean
       }
       can_update_task: {
@@ -585,6 +762,15 @@ export type Database = {
           _timezone: string
         }
         Returns: string
+      }
+      edit_progress_update: {
+        Args: {
+          _issues?: string
+          _summary: string
+          _update_id: string
+          _work_date?: string
+        }
+        Returns: undefined
       }
       has_role: {
         Args: {
@@ -656,6 +842,21 @@ export type Database = {
       set_workspace_member_status: {
         Args: { _member_id: string; _status: string }
         Returns: undefined
+      }
+      submit_progress_update: {
+        Args: {
+          _issues?: string
+          _photo_ids?: string[]
+          _project_id: string
+          _summary: string
+          _task_ids?: string[]
+          _work_date?: string
+        }
+        Returns: string
+      }
+      sync_progress_update_locks: {
+        Args: { _project_id?: string }
+        Returns: number
       }
       update_workspace_member_role: {
         Args: { _member_id: string; _new_role: string }
