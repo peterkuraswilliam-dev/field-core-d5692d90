@@ -631,6 +631,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      photo_path_project: { Args: { _name: string }; Returns: string }
       preview_workspace_invitation: {
         Args: { _token: string }
         Returns: {
