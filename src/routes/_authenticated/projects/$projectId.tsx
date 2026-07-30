@@ -93,8 +93,10 @@ function ProjectDetail() {
 
   useEffect(() => {
     load();
+    markProjectOpened(projectId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
+
 
   const isAssigned = members.some((m) => m.user_id === user.id);
   const canManage =
