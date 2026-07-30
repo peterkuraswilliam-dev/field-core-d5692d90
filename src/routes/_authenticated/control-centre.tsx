@@ -230,10 +230,13 @@ function ControlCentre() {
           </div>
         </section>
 
-        <section className="mt-4 grid grid-cols-3 gap-3">
-          <StatCard label="Active" value={counts.active} />
-          <StatCard label="Pending" value={counts.pending} />
-          <StatCard label="Suspended" value={counts.suspended} />
+        <section className="mt-6">
+          <h2 className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">Team</h2>
+          <div className="grid grid-cols-3 gap-3">
+            <StatCard label="Active" value={counts.active} />
+            <StatCard label="Pending" value={counts.pending} />
+            <StatCard label="Suspended" value={counts.suspended} />
+          </div>
         </section>
 
         {canManageTeam && (
