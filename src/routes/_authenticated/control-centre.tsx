@@ -94,8 +94,11 @@ function ControlCentre() {
     recentCompleted: TaskWithAssignee[];
   } | null>(null);
   const [projectFeed, setProjectFeed] = useState<ActivityEntry[]>([]);
+  const [photoStats, setPhotoStats] = useState<PhotoStats | null>(null);
+  const camera = useCamera();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
 
   useEffect(() => {
     supabase
