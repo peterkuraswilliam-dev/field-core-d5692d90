@@ -78,6 +78,8 @@ function ProjectDetail() {
   const { user, workspace, membership } = ctx;
   const role = membership.role as WorkspaceRole;
   const navigate = useNavigate();
+  const camera = useCamera();
+
 
   const [project, setProject] = useState<Project | null | undefined>(undefined);
   const [members, setMembers] = useState<ProjectMemberRow[]>([]);
