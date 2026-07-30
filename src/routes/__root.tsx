@@ -86,13 +86,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "The contractor operating system. Manage projects, teams and jobsites from your phone.",
       },
-      { property: "og:title", content: "Contractor OS" },
+      { property: "og:title", content: "Contractor OS — Manage your projects and team" },
       {
         property: "og:description",
-        content: "The contractor operating system for modern build teams.",
+        content: "The contractor operating system. Manage projects, teams and jobsites from your phone.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Contractor OS — Manage your projects and team" },
+      { name: "twitter:description", content: "The contractor operating system. Manage projects, teams and jobsites from your phone." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/4953390f-496e-4320-8e19-9b8d900916a1/id-preview-9522653e--4db98866-f9dc-4a5c-9767-4cd1c5c7fa93.lovable.app-1785414435123.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/4953390f-496e-4320-8e19-9b8d900916a1/id-preview-9522653e--4db98866-f9dc-4a5c-9767-4cd1c5c7fa93.lovable.app-1785414435123.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
