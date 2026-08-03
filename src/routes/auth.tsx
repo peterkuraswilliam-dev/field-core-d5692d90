@@ -5,8 +5,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { isCurrentUserAdmin } from "@/lib/roles";
-import { lovable } from "@/integrations/lovable";
-import { AuthShell, Button, Divider, Field, GoogleButton } from "@/components/auth-ui";
+import { AuthShell, Button, Field } from "@/components/auth-ui";
 import { BrandLogo } from "@/components/brand-logo";
 
 const authSearch = z.object({ mode: z.enum(["signin", "signup"]).optional() });
@@ -74,30 +73,6 @@ function AuthPage() {
   );
 }
 
-function useGoogle() {
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const go = async () => {
-    setLoading(true);
-    try {
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
-      });
-      if (result.error) {
-        toast.error("Google sign-in failed. Please try again.");
-        setLoading(false);
-        return;
-      }
-      if (result.redirected) return;
-      navigate({ to: "/" });
-    } catch {
-      toast.error("Google sign-in failed. Please try again.");
-      setLoading(false);
-    }
-  };
-  return { loading, go };
-}
-
 const signInSchema = z.object({
   email: z.string().trim().email("Enter a valid email"),
   password: z.string().min(1, "Password is required"),
@@ -110,7 +85,6 @@ function SignInForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const google = useGoogle();
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,8 +114,6 @@ function SignInForm() {
 
   return (
     <div>
-      <GoogleButton onClick={google.go} loading={google.loading} />
-      <Divider>or</Divider>
       <form onSubmit={submit} className="space-y-4">
         <Field
           label="Email"
@@ -212,7 +184,6 @@ function SignUpForm({ onSwitch }: { onSwitch: () => void }) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
-  const google = useGoogle();
 
   if (sent) {
     return (
@@ -270,8 +241,6 @@ function SignUpForm({ onSwitch }: { onSwitch: () => void }) {
 
   return (
     <div>
-      <GoogleButton onClick={google.go} loading={google.loading} />
-      <Divider>or</Divider>
       <form onSubmit={submit} className="space-y-4">
         <Field
           label="Full name"

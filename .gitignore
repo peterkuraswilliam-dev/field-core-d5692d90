@@ -8,6 +8,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+.pnpm-store/
 dist
 dist-ssr
 .output
@@ -15,6 +16,13 @@ dist-ssr
 .tanstack/**
 .nitro
 *.local
+
+# Local database backups and restore credentials
+*.backup
+*.dump
+.env.restore
+postgresql-*-binaries.zip
+.postgres-tools/
 
 # Wrangler / Cloudflare
 .wrangler/
