@@ -23,6 +23,7 @@ dist-ssr
 .env.restore
 postgresql-*-binaries.zip
 .postgres-tools/
+supabase/.temp/
 
 # Wrangler / Cloudflare
 .wrangler/
