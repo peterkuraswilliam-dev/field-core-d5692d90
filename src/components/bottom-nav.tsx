@@ -13,9 +13,19 @@ export function BottomNav() {
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-      <div className="mx-auto flex w-full max-w-md items-end justify-between px-4 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2">
-        <NavBtn label="Home" Icon={Home} to="/control-centre" active={isActive("/control-centre")} />
-        <NavBtn label="Projects" Icon={FolderKanban} to="/projects" active={isActive("/projects")} />
+      <div className="mx-auto flex w-full max-w-3xl items-end justify-between px-2 min-[360px]:px-4 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2">
+        <NavBtn
+          label="Home"
+          Icon={Home}
+          to="/control-centre"
+          active={isActive("/control-centre")}
+        />
+        <NavBtn
+          label="Projects"
+          Icon={FolderKanban}
+          to="/projects"
+          active={isActive("/projects")}
+        />
         <button
           aria-label="Camera"
           onClick={() => openCamera(currentProjectId)}
@@ -30,7 +40,6 @@ export function BottomNav() {
   );
 }
 
-
 function NavBtn({
   label,
   Icon,
@@ -42,7 +51,7 @@ function NavBtn({
   active?: boolean;
   to?: string;
 }) {
-  const cls = `flex h-14 w-14 flex-col items-center justify-center gap-1 rounded-xl text-[11px] transition ${
+  const cls = `flex h-14 min-w-0 flex-1 max-w-24 flex-col items-center justify-center gap-1 rounded-xl text-[10px] min-[360px]:text-[11px] transition ${
     active ? "text-gold" : "text-muted-foreground hover:text-foreground"
   }`;
   if (to) {

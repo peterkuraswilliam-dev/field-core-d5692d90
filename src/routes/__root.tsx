@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { Toaster } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { ServiceWorkerRegistration } from "@/components/app-install";
 
 function NotFoundComponent() {
   return (
@@ -84,16 +85,23 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "Contractor OS — Manage your projects and team" },
       {
         property: "og:description",
-        content: "The contractor operating system. Manage projects, teams and jobsites from your phone.",
+        content:
+          "The contractor operating system. Manage projects, teams and jobsites from your phone.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Contractor OS — Manage your projects and team" },
-      { name: "twitter:description", content: "The contractor operating system. Manage projects, teams and jobsites from your phone." },
+      {
+        name: "twitter:description",
+        content:
+          "The contractor operating system. Manage projects, teams and jobsites from your phone.",
+      },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/app-icon.svg" },
     ],
   }),
   shellComponent: RootShell,
@@ -132,6 +140,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <ServiceWorkerRegistration />
       <Outlet />
       <Toaster theme="dark" position="top-center" richColors />
     </QueryClientProvider>

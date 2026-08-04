@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthShell, Button, Field } from "@/components/auth-ui";
 import { roleLabel } from "@/lib/workspace";
+import { AppInstallButton } from "@/components/app-install";
 
 export const Route = createFileRoute("/_authenticated/workspace-settings")({
   ssr: false,
@@ -116,14 +117,69 @@ function WorkspaceSettings() {
         </p>
       </div>
 
+      <div className="mt-5">
+        <AppInstallButton />
+      </div>
+
       <fieldset disabled={!isOwner || loading} className="mt-6 space-y-4">
-        <Field label="Business name" name="name" value={form.name} onChange={set("name")} error={errors.name} maxLength={120} />
-        <Field label="Business email" name="business_email" type="email" value={form.business_email} onChange={set("business_email")} error={errors.business_email} maxLength={255} />
-        <Field label="Phone number" name="phone" type="tel" value={form.phone} onChange={set("phone")} error={errors.phone} maxLength={40} />
-        <Field label="Business type" name="business_type" value={form.business_type} onChange={set("business_type")} error={errors.business_type} maxLength={80} />
-        <Field label="Country" name="country" value={form.country} onChange={set("country")} error={errors.country} maxLength={80} />
-        <Field label="Timezone" name="timezone" value={form.timezone} onChange={set("timezone")} error={errors.timezone} maxLength={80} />
-        <Field label="Business logo URL" name="logo_url" value={form.logo_url} onChange={set("logo_url")} error={errors.logo_url} maxLength={500} />
+        <Field
+          label="Business name"
+          name="name"
+          value={form.name}
+          onChange={set("name")}
+          error={errors.name}
+          maxLength={120}
+        />
+        <Field
+          label="Business email"
+          name="business_email"
+          type="email"
+          value={form.business_email}
+          onChange={set("business_email")}
+          error={errors.business_email}
+          maxLength={255}
+        />
+        <Field
+          label="Phone number"
+          name="phone"
+          type="tel"
+          value={form.phone}
+          onChange={set("phone")}
+          error={errors.phone}
+          maxLength={40}
+        />
+        <Field
+          label="Business type"
+          name="business_type"
+          value={form.business_type}
+          onChange={set("business_type")}
+          error={errors.business_type}
+          maxLength={80}
+        />
+        <Field
+          label="Country"
+          name="country"
+          value={form.country}
+          onChange={set("country")}
+          error={errors.country}
+          maxLength={80}
+        />
+        <Field
+          label="Timezone"
+          name="timezone"
+          value={form.timezone}
+          onChange={set("timezone")}
+          error={errors.timezone}
+          maxLength={80}
+        />
+        <Field
+          label="Business logo URL"
+          name="logo_url"
+          value={form.logo_url}
+          onChange={set("logo_url")}
+          error={errors.logo_url}
+          maxLength={500}
+        />
         {isOwner && (
           <Button loading={loading} onClick={submit} type="button">
             {loading ? "Saving…" : "Save changes"}

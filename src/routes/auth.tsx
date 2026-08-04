@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { isCurrentUserAdmin } from "@/lib/roles";
 import { AuthShell, Button, Field } from "@/components/auth-ui";
 import { BrandLogo } from "@/components/brand-logo";
+import { AppInstallButton } from "@/components/app-install";
 
 const authSearch = z.object({ mode: z.enum(["signin", "signup"]).optional() });
 
@@ -68,7 +69,15 @@ function AuthPage() {
         ))}
       </div>
 
-      <div className="mt-6">{tab === "signin" ? <SignInForm /> : <SignUpForm onSwitch={() => setTab("signin")} />}</div>
+      <div className="mt-6">
+        {tab === "signin" ? <SignInForm /> : <SignUpForm onSwitch={() => setTab("signin")} />}
+      </div>
+      <div className="mt-5">
+        <AppInstallButton />
+        <p className="mt-2 text-center text-xs text-muted-foreground">
+          Also works on iPhone, iPad, Windows and Mac.
+        </p>
+      </div>
     </AuthShell>
   );
 }
