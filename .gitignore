@@ -15,7 +15,13 @@ dist-ssr
 .vinxi
 .tanstack/**
 .nitro
+.vercel
 *.local
+
+# Local environment files (commit .env.example only)
+.env
+.env.*
+!.env.example
 
 # Local database backups and restore credentials
 *.backup

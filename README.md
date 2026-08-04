@@ -266,3 +266,23 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Deploying to Vercel
+
+Import the repository into Vercel and leave the framework preset on the detected
+TanStack Start setting. The standard `pnpm build` command emits Vercel Build
+Output API files automatically when it runs on Vercel.
+
+Configure these variables for Production, Preview, and Development:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`
+- `SUPABASE_URL`
+- `SUPABASE_PUBLISHABLE_KEY`
+
+If trusted server-side admin operations are enabled, also configure
+`SUPABASE_SERVICE_ROLE_KEY`. Never expose that value with a `VITE_` prefix.
+
+In Supabase Authentication settings, add the production Vercel domain and any
+required preview domains to the allowed redirect URLs so OAuth and password
+recovery callbacks can return to the app.
