@@ -18,18 +18,9 @@ export default defineConfig({
     tailwindcss(),
     tsConfigPaths({ projects: ["./tsconfig.json"] }),
     tanstackStart({ server: { entry: "server" } }),
-    nitro({
-      preset: "cloudflare-module",
-      output: {
-        dir: "dist",
-        serverDir: "dist/server",
-        publicDir: "dist/client",
-      },
-      cloudflare: {
-        nodeCompat: true,
-        deployConfig: true,
-      },
-    }),
+    // Nitro detects Vercel during the platform build and emits the Build Output API
+    // artifact. Avoid forcing a provider preset here so local builds remain portable.
+    nitro(),
     viteReact(),
   ],
 });
