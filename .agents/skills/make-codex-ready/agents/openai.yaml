@@ -1,0 +1,4 @@
+interface:
+  display_name: "Make this Codex-ready"
+  short_description: "Turn feature planning into an implementation-ready handover"
+  default_prompt: "Use $make-codex-ready to reconcile this feature plan into the repository safely."
