@@ -31,6 +31,17 @@ Never expose the service-role key with a `VITE_` prefix.
 The local `supabase/config.toml` identifies the linked project used by the
 repository. Treat changes to that link as environment-sensitive.
 
+## Priority: production email delivery
+
+**Top MVP priority:** purchase a permanent Field Core domain, verify its DNS in
+Resend, and configure Resend as the custom SMTP provider for Supabase Auth.
+Complete this before inviting real pilot users so invitations, account
+verification, magic links, and password recovery are not constrained by the
+Supabase development email service limits.
+
+The Resend Marketplace installation has been selected but cannot be provisioned
+until a domain controlled by the project owner is available.
+
 ## Installable web app
 
 The deployment must serve `manifest.webmanifest`, `sw.js`, the application icon,
