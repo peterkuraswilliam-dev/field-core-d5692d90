@@ -5,33 +5,38 @@ an underscore organize access control without necessarily appearing in the URL.
 
 ## Public and redirect routes
 
-| URL | Source | Purpose |
-| --- | --- | --- |
-| `/` | `src/routes/index.tsx` | Entry redirect based on authentication state |
-| `/auth` | `src/routes/auth.tsx` | Sign in and account creation |
-| `/forgot-password` | `src/routes/forgot-password.tsx` | Request a password-reset link |
-| `/reset-password` | `src/routes/reset-password.tsx` | Set a new password from recovery state |
-| `/accept-invite` | `src/routes/accept-invite.tsx` | Preview and accept a workspace invitation |
+| URL                | Source                           | Purpose                                                            |
+| ------------------ | -------------------------------- | ------------------------------------------------------------------ |
+| `/`                | `src/routes/index.tsx`           | Entry redirect based on authentication state                       |
+| `/auth`            | `src/routes/auth.tsx`            | Sign in and account creation; accepts validated invitation context |
+| `/forgot-password` | `src/routes/forgot-password.tsx` | Request a password-reset link                                      |
+| `/reset-password`  | `src/routes/reset-password.tsx`  | Set a new password from recovery state                             |
+| `/accept-invite`   | `src/routes/accept-invite.tsx`   | Preview and accept a workspace invitation                          |
+
+When an unauthenticated user opens an invitation, `/accept-invite` passes its
+validated token to `/auth`. Successful sign-in, immediate signup, or an email
+verification callback returns the user to the same invitation before normal
+workspace routing continues.
 
 ## Authenticated routes
 
 These routes run beneath `src/routes/_authenticated/route.tsx`.
 
-| URL | Source | Purpose |
-| --- | --- | --- |
-| `/onboarding` | `_authenticated/onboarding.tsx` | Create the user's first workspace |
-| `/blocked` | `_authenticated/blocked.tsx` | Explain suspended or removed access |
-| `/control-centre` | `_authenticated/control-centre.tsx` | Operational dashboard |
-| `/projects` | `_authenticated/projects/index.tsx` | List visible projects |
-| `/projects/new` | `_authenticated/projects/new.tsx` | Create a project |
-| `/projects/:projectId` | `_authenticated/projects/$projectId.tsx` | Project overview and feature tabs |
-| `/team` | `_authenticated/team.tsx` | Members, invitations, roles, and audit activity |
-| `/workspace-settings` | `_authenticated/workspace-settings.tsx` | Workspace configuration |
+| URL                    | Source                                   | Purpose                                         |
+| ---------------------- | ---------------------------------------- | ----------------------------------------------- |
+| `/onboarding`          | `_authenticated/onboarding.tsx`          | Create the user's first workspace               |
+| `/blocked`             | `_authenticated/blocked.tsx`             | Explain suspended or removed access             |
+| `/control-centre`      | `_authenticated/control-centre.tsx`      | Operational dashboard                           |
+| `/projects`            | `_authenticated/projects/index.tsx`      | List visible projects                           |
+| `/projects/new`        | `_authenticated/projects/new.tsx`        | Create a project                                |
+| `/projects/:projectId` | `_authenticated/projects/$projectId.tsx` | Project overview and feature tabs               |
+| `/team`                | `_authenticated/team.tsx`                | Members, invitations, roles, and audit activity |
+| `/workspace-settings`  | `_authenticated/workspace-settings.tsx`  | Workspace configuration                         |
 
 ## Admin route
 
-| URL | Source | Purpose |
-| --- | --- | --- |
+| URL      | Source                            | Purpose                           |
+| -------- | --------------------------------- | --------------------------------- |
 | `/admin` | `_authenticated/_admin/admin.tsx` | Platform administration dashboard |
 
 The `_authenticated/_admin/route.tsx` layout checks platform-level admin access

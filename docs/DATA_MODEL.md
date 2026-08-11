@@ -6,37 +6,37 @@ TypeScript representation of the current database contract.
 
 ## Tables
 
-| Table | Purpose | Important relationships |
-| --- | --- | --- |
-| `profiles` | User identity and application profile | `id` corresponds to the authenticated user |
-| `user_roles` | Platform-level role assignments | Links a user to an app role |
-| `workspaces` | Business/workspace details | Parent of members, projects, invitations, and logs |
-| `workspace_members` | User membership, role, and status | Links users to workspaces |
-| `workspace_invitations` | Tokenized invitations and acceptance state | Belongs to a workspace and records inviter/acceptor |
-| `workspace_audit_log` | Immutable-style workspace event history | Belongs to a workspace; may identify actor and target |
-| `projects` | Customer job and delivery metadata | Belongs to a workspace and creator |
-| `project_members` | Project assignments | Links a project, workspace, and user |
-| `project_tasks` | Actionable project work | Belongs to project/workspace; optional assignee |
-| `project_notes` | Project text notes | Belongs to project/workspace and author |
-| `project_activity` | Project event stream | Belongs to project/workspace; optional actor |
-| `project_photos` | Photo metadata | Belongs to project/workspace and uploader |
-| `project_progress_updates` | Dated field progress records | Belongs to project/workspace and author |
-| `project_progress_update_photos` | Progress-to-photo join | Links an update to a photo |
-| `project_progress_update_tasks` | Progress-to-task join | Links an update to a task |
-| `project_progress_corrections` | Append-only correction notes | Belongs to a progress update, project, and workspace |
+| Table                            | Purpose                                    | Important relationships                               |
+| -------------------------------- | ------------------------------------------ | ----------------------------------------------------- |
+| `profiles`                       | User identity and application profile      | `id` corresponds to the authenticated user            |
+| `user_roles`                     | Platform-level role assignments            | Links a user to an app role                           |
+| `workspaces`                     | Business/workspace details                 | Parent of members, projects, invitations, and logs    |
+| `workspace_members`              | User membership, role, and status          | Links users to workspaces                             |
+| `workspace_invitations`          | Tokenized invitations and acceptance state | Belongs to a workspace and records inviter/acceptor   |
+| `workspace_audit_log`            | Immutable-style workspace event history    | Belongs to a workspace; may identify actor and target |
+| `projects`                       | Customer job and delivery metadata         | Belongs to a workspace and creator                    |
+| `project_members`                | Project assignments                        | Links a project, workspace, and user                  |
+| `project_tasks`                  | Actionable project work                    | Belongs to project/workspace; optional assignee       |
+| `project_notes`                  | Project text notes                         | Belongs to project/workspace and author               |
+| `project_activity`               | Project event stream                       | Belongs to project/workspace; optional actor          |
+| `project_photos`                 | Photo metadata                             | Belongs to project/workspace and uploader             |
+| `project_progress_updates`       | Dated field progress records               | Belongs to project/workspace and author               |
+| `project_progress_update_photos` | Progress-to-photo join                     | Links an update to a photo                            |
+| `project_progress_update_tasks`  | Progress-to-task join                      | Links an update to a task                             |
+| `project_progress_corrections`   | Append-only correction notes               | Belongs to a progress update, project, and workspace  |
 
 ## Enum values
 
-| Enum | Values |
-| --- | --- |
-| `app_role` | `admin`, `moderator`, `user` |
-| `workspace_role` | `owner`, `admin`, `project_manager`, `field_worker`, `contractor`, `viewer` |
-| `membership_status` | `active`, `suspended`, `removed` |
-| `invitation_status` | `pending`, `accepted`, `cancelled`, `expired` |
-| `project_status` | `enquiry`, `quote_required`, `quote_sent`, `approved`, `scheduled`, `in_progress`, `waiting`, `completed`, `cancelled` |
-| `task_status` | `todo`, `in_progress`, `blocked`, `completed` |
-| `task_priority` | `low`, `normal`, `high`, `urgent` |
-| `photo_category` | `before`, `during`, `after`, `issue`, `materials`, `receipt`, `other` |
+| Enum                | Values                                                                                                                 |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `app_role`          | `admin`, `moderator`, `user`                                                                                           |
+| `workspace_role`    | `owner`, `admin`, `project_manager`, `field_worker`, `contractor`, `viewer`                                            |
+| `membership_status` | `active`, `suspended`, `removed`                                                                                       |
+| `invitation_status` | `pending`, `accepted`, `cancelled`, `expired`                                                                          |
+| `project_status`    | `enquiry`, `quote_required`, `quote_sent`, `approved`, `scheduled`, `in_progress`, `waiting`, `completed`, `cancelled` |
+| `task_status`       | `todo`, `in_progress`, `blocked`, `completed`                                                                          |
+| `task_priority`     | `low`, `normal`, `high`, `urgent`                                                                                      |
+| `photo_category`    | `before`, `during`, `after`, `issue`, `materials`, `receipt`, `other`                                                  |
 
 ## Key record contents
 
@@ -53,7 +53,12 @@ Migrations define database functions for operations that must be atomic or
 permission-aware, including workspace creation, invitations, membership changes,
 project assignment, access checks, and role lookup. Triggers maintain timestamps,
 create and synchronize profiles, protect sensitive fields, validate relationship
-consistency, and write audit/activity events.
+consistency, assign each project creator to the new project, and write
+audit/activity events.
+
+Profile visibility uses a security-definer access helper to avoid recursive RLS
+evaluation. It permits an active viewer to read profiles belonging to the same
+workspace while preserving isolation from users in other workspaces.
 
 Use the migration files for exact signatures and enforcement logic; generated
 types list the callable RPC contract available to the application.

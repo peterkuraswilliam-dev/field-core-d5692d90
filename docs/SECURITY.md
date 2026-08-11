@@ -47,9 +47,15 @@ Do not substitute one role system for the other.
 - Active workspace membership is required for normal workspace routes.
 - Suspended and removed members are routed to the blocked screen.
 - Project visibility depends on workspace authority or project assignment.
+- Project creation atomically assigns the creator as a project member; it does
+  not grant project managers workspace-wide project visibility.
+- An active member may read profile details only for users who share one of
+  their workspaces. The profile policy does not expose unrelated workspace users.
 - Child records carry workspace and project identifiers and are checked against
   accessible projects in policies and helper functions.
 - Invitations use hashed tokens in the database and have status and expiry state.
+- Auth routes carry a validated invitation token through sign-in and account
+  verification, then return the user to invitation acceptance.
 
 ## Secrets and environment variables
 

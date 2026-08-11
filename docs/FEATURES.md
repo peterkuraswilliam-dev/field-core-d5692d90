@@ -32,6 +32,10 @@ and shortcuts.
 - Owners and admins can invite permitted roles.
 - Invitation flows support preview, acceptance, resend, cancellation, expiry,
   and an optional message.
+- Invitation context is preserved through sign-in, account creation, and email
+  verification so the user returns to the invitation they opened.
+- Active workspace members can see the names and email addresses of teammates in
+  the same workspace. Users from unrelated workspaces remain hidden by policy.
 - Owners can manage every non-owner role.
 - Admins can manage project managers, field workers, contractors, and viewers.
 - Membership status supports active, suspended, and removed states.
@@ -47,6 +51,9 @@ and shortcuts.
 - Owners and admins have workspace-wide project visibility; other roles depend on
   project assignment and database policy.
 - Project membership can be managed by authorized roles.
+- A project creator is automatically added to the project team. This lets a
+  project manager read and manage the project immediately after creation without
+  broadening access to other unassigned projects.
 
 ## Tasks
 

@@ -6,6 +6,10 @@ The standard production target is Vercel. Import the repository and keep the
 detected TanStack Start framework settings. `pnpm build` produces the expected
 TanStack/Nitro output and Vercel Build Output API structure.
 
+Use `https://field-core-d5692d90.vercel.app` as the stable production address.
+Hash-named Vercel deployment URLs are immutable snapshots and should not be used
+as permanent application links.
+
 Configure the required variables for Development, Preview, and Production:
 
 - `VITE_SUPABASE_PROJECT_ID`
@@ -67,6 +71,8 @@ preserving server output.
 8. Verify sign-in, onboarding, project, task, progress, note, and photo flows.
 9. Check the application on a small mobile viewport and desktop.
 10. Confirm no secrets, local `.env` files, build output, or tool state are tracked.
+
+Record completed manual release checks in [Testing](TESTING.md).
 
 ## Rollback considerations
 

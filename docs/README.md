@@ -6,16 +6,17 @@ disagree, source code, migrations, and generated database types are authoritativ
 
 ## Start here
 
-| Document | Contents |
-| --- | --- |
-| [Product](PRODUCT.md) | Purpose, users, capabilities, terminology, and current limits |
-| [Features](FEATURES.md) | Implemented user flows and feature behavior |
-| [Architecture](ARCHITECTURE.md) | Runtime shape, repository map, and system boundaries |
-| [Routes](ROUTES.md) | Public, authenticated, admin, redirect, and error routes |
-| [Data model](DATA_MODEL.md) | Tables, enums, relationships, storage, and migrations |
-| [Security](SECURITY.md) | Authentication, authorization, RLS, roles, and secrets |
-| [Development](DEVELOPMENT.md) | Local setup, commands, conventions, and validation |
-| [Deployment](DEPLOYMENT.md) | Vercel, Supabase, Sites metadata, and release checklist |
+| Document                        | Contents                                                             |
+| ------------------------------- | -------------------------------------------------------------------- |
+| [Product](PRODUCT.md)           | Purpose, users, capabilities, terminology, and current limits        |
+| [Features](FEATURES.md)         | Implemented user flows and feature behavior                          |
+| [Architecture](ARCHITECTURE.md) | Runtime shape, repository map, and system boundaries                 |
+| [Routes](ROUTES.md)             | Public, authenticated, admin, redirect, and error routes             |
+| [Data model](DATA_MODEL.md)     | Tables, enums, relationships, storage, and migrations                |
+| [Security](SECURITY.md)         | Authentication, authorization, RLS, roles, and secrets               |
+| [Development](DEVELOPMENT.md)   | Local setup, commands, conventions, and validation                   |
+| [Deployment](DEPLOYMENT.md)     | Vercel, Supabase, Sites metadata, and release checklist              |
+| [Testing](TESTING.md)           | Manual production acceptance coverage, results, and remaining checks |
 
 ## Other project guidance
 
