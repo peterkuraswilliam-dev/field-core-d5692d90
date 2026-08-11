@@ -28,11 +28,7 @@ import {
   statusLabel,
   type ProjectListItem,
 } from "@/lib/projects";
-import {
-  fetchWorkspaceTaskStats,
-  taskStatusLabel,
-  type TaskWithAssignee,
-} from "@/lib/tasks";
+import { fetchWorkspaceTaskStats, taskStatusLabel, type TaskWithAssignee } from "@/lib/tasks";
 import { fetchWorkspaceActivity, humanActivity, type ActivityEntry } from "@/lib/activity";
 import {
   canUploadPhotos,
@@ -43,7 +39,6 @@ import {
 } from "@/lib/photos";
 import { useCamera } from "@/components/camera-provider";
 import { fetchProgressStats, type ProgressUpdate } from "@/lib/progress";
-
 
 export const Route = createFileRoute("/_authenticated/control-centre")({
   head: () => ({
@@ -83,7 +78,10 @@ function ControlCentre() {
   const canCreate = canCreateProjects(role);
   const wideAccess = hasWorkspaceWideAccess(role);
 
-  const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
+  const [profile, setProfile] = useState<{
+    full_name: string | null;
+    avatar_url: string | null;
+  } | null>(null);
   const [counts, setCounts] = useState<Counts>({ active: 0, pending: 0, suspended: 0 });
   const [audit, setAudit] = useState<AuditEntry[]>([]);
   const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
@@ -106,7 +104,6 @@ function ControlCentre() {
   const camera = useCamera();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-
 
   useEffect(() => {
     supabase
@@ -174,15 +171,20 @@ function ControlCentre() {
 
   useEffect(() => {
     if (!projects) return;
-    const visible = wideAccess ? projects : projects.filter((project) => myProjectIds.has(project.id));
-    fetchProgressStats(workspace.id, visible.map((project) => project.id))
+    const visible = wideAccess
+      ? projects
+      : projects.filter((project) => myProjectIds.has(project.id));
+    fetchProgressStats(
+      workspace.id,
+      visible.map((project) => project.id),
+    )
       .then(setProgressStats)
       .catch(() => setProgressStats({ today: 0, withoutRecent: 0, recent: [] }));
   }, [projects, myProjectIds, wideAccess, workspace.id]);
 
-
   const meta = (user.user_metadata ?? {}) as { full_name?: string; name?: string };
-  const name = profile?.full_name || meta.full_name || meta.name || user.email?.split("@")[0] || "there";
+  const name =
+    profile?.full_name || meta.full_name || meta.name || user.email?.split("@")[0] || "there";
   const firstName = name.split(" ")[0];
 
   const signOut = async () => {
@@ -232,7 +234,10 @@ function ControlCentre() {
             </div>
           </div>
           <div className="mt-4 flex items-center justify-between border-t border-border pt-4 text-sm">
-            <Link to="/team" className="inline-flex items-center gap-1 text-sm font-medium text-foreground hover:text-gold">
+            <Link
+              to="/team"
+              className="inline-flex items-center gap-1 text-sm font-medium text-foreground hover:text-gold"
+            >
               <Users size={14} /> Team
             </Link>
             <Link
@@ -266,7 +271,9 @@ function ControlCentre() {
         )}
 
         <ProgressSummary
-          projects={(projects ?? []).filter((project) => wideAccess || myProjectIds.has(project.id))}
+          projects={(projects ?? []).filter(
+            (project) => wideAccess || myProjectIds.has(project.id),
+          )}
           stats={progressStats}
           canCreate={role !== "viewer"}
           onStart={(projectId) =>
@@ -293,7 +300,6 @@ function ControlCentre() {
           prominent={role === "field_worker" || role === "contractor"}
           onCamera={() => camera.openCamera(null)}
         />
-
 
         {projectFeed.length > 0 && (
           <section className="mt-6">
@@ -385,9 +391,16 @@ function ProgressSummary({
               className="h-11 min-w-0 flex-1 rounded-xl border border-black/15 bg-black/10 px-3 text-sm font-medium"
               aria-label="Project for progress update"
             >
-              {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
             </select>
-            <button onClick={() => projectId && onStart(projectId)} className="h-11 rounded-xl bg-background px-4 text-sm font-semibold text-gold">
+            <button
+              onClick={() => projectId && onStart(projectId)}
+              className="h-11 rounded-xl bg-background px-4 text-sm font-semibold text-gold"
+            >
               Start
             </button>
           </div>
@@ -399,7 +412,9 @@ function ProgressSummary({
       </div>
       {stats && stats.recent.length > 0 && (
         <div className="rounded-2xl border border-border bg-surface p-4">
-          <div className="mb-3 text-[10px] uppercase tracking-widest text-muted-foreground">Recent progress updates</div>
+          <div className="mb-3 text-[10px] uppercase tracking-widest text-muted-foreground">
+            Recent progress updates
+          </div>
           <ul className="space-y-3">
             {stats.recent.map((update) => (
               <li key={update.id}>
@@ -410,10 +425,16 @@ function ProgressSummary({
                   className="flex items-start justify-between gap-3"
                 >
                   <div className="min-w-0">
-                    <div className="truncate text-sm font-semibold text-foreground">{update.project_name}</div>
-                    <div className="line-clamp-1 text-xs text-muted-foreground">{update.summary}</div>
+                    <div className="truncate text-sm font-semibold text-foreground">
+                      {update.project_name}
+                    </div>
+                    <div className="line-clamp-1 text-xs text-muted-foreground">
+                      {update.summary}
+                    </div>
                   </div>
-                  <span className="shrink-0 text-[10px] text-muted-foreground">{new Date(update.work_date).toLocaleDateString()}</span>
+                  <span className="shrink-0 text-[10px] text-muted-foreground">
+                    {new Date(update.work_date).toLocaleDateString()}
+                  </span>
                 </Link>
               </li>
             ))}
@@ -516,8 +537,13 @@ function PhotosSummary({
   );
 }
 
-
-function Badge({ children, tone }: { children: React.ReactNode; tone: "gold" | "outline" | "muted" }) {
+function Badge({
+  children,
+  tone,
+}: {
+  children: React.ReactNode;
+  tone: "gold" | "outline" | "muted";
+}) {
   const cls =
     tone === "gold"
       ? "bg-gold text-gold-foreground"
@@ -525,7 +551,9 @@ function Badge({ children, tone }: { children: React.ReactNode; tone: "gold" | "
         ? "border border-gold/40 text-gold"
         : "bg-surface-elevated text-muted-foreground";
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${cls}`}>
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${cls}`}
+    >
       {children}
     </span>
   );
@@ -543,7 +571,12 @@ function StatCard({ label, value }: { label: string; value: number }) {
 function TasksSummary({
   stats,
 }: {
-  stats: { dueToday: number; overdue: number; mine: number; recentCompleted: TaskWithAssignee[] } | null;
+  stats: {
+    dueToday: number;
+    overdue: number;
+    mine: number;
+    recentCompleted: TaskWithAssignee[];
+  } | null;
 }) {
   return (
     <section className="mt-6 space-y-3">
@@ -591,9 +624,7 @@ function ProjectsSummary({
 }) {
   const list = projects ?? [];
   const visible = wideAccess ? list : list.filter((p) => myProjectIds.has(p.id));
-  const active = visible.filter(
-    (p) => p.status !== "completed" && p.status !== "cancelled",
-  ).length;
+  const active = visible.filter((p) => p.status !== "completed" && p.status !== "cancelled").length;
   const attention = visible.filter((p) => NEEDS_ATTENTION_STATUSES.includes(p.status)).length;
   const mine = list.filter((p) => myProjectIds.has(p.id)).length;
   const recent = [...visible].slice(0, 3);
@@ -690,6 +721,3 @@ function Avatar({ name, avatarUrl }: { name: string; avatarUrl?: string | null }
     </div>
   );
 }
-
-
-

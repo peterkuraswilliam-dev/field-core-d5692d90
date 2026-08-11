@@ -27,8 +27,7 @@ export async function fetchProjectNotes(projectId: string): Promise<NoteWithAuth
   const byId = new Map((profs ?? []).map((p) => [p.id, p]));
   return rows.map((r) => {
     const p = byId.get(r.created_by);
-    const edited =
-      new Date(r.updated_at).getTime() - new Date(r.created_at).getTime() > 1000;
+    const edited = new Date(r.updated_at).getTime() - new Date(r.created_at).getTime() > 1000;
     return {
       ...r,
       author_name: p?.full_name?.trim() || p?.email?.split("@")[0] || "Member",

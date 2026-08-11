@@ -99,8 +99,12 @@ function AcceptInvite() {
         {!loading && preview && (
           <div className="space-y-4">
             <div>
-              <div className="text-xs uppercase tracking-widest text-muted-foreground">Business</div>
-              <div className="mt-1 text-lg font-semibold text-foreground">{preview.workspace_name}</div>
+              <div className="text-xs uppercase tracking-widest text-muted-foreground">
+                Business
+              </div>
+              <div className="mt-1 text-lg font-semibold text-foreground">
+                {preview.workspace_name}
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
@@ -132,7 +136,8 @@ function AcceptInvite() {
               <div className="space-y-3">
                 {signedInEmail.toLowerCase() !== preview.email.toLowerCase() ? (
                   <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-                    You're signed in as {signedInEmail}. This invitation was sent to {preview.email}.
+                    You're signed in as {signedInEmail}. This invitation was sent to {preview.email}
+                    .
                   </div>
                 ) : (
                   <Button onClick={accept} loading={accepting}>

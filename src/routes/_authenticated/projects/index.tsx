@@ -99,7 +99,10 @@ function ProjectsPage() {
       />
       <div className="relative mx-auto w-full max-w-3xl px-5 pt-6">
         <header className="flex items-center justify-between">
-          <Link to="/control-centre" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+          <Link
+            to="/control-centre"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          >
             <ArrowLeft size={16} /> Back
           </Link>
           {canCreate && (
@@ -119,7 +122,10 @@ function ProjectsPage() {
 
         <div className="mt-5 space-y-3">
           <div className="relative">
-            <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Search
+              size={16}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -149,7 +155,9 @@ function ProjectsPage() {
         </div>
 
         <section className="mt-6">
-          {projects === null && <div className="text-sm text-muted-foreground">Loading projects…</div>}
+          {projects === null && (
+            <div className="text-sm text-muted-foreground">Loading projects…</div>
+          )}
           {projects && finalList.length === 0 && (
             <EmptyState canCreate={canCreate} onCreate={() => navigate({ to: "/projects/new" })} />
           )}
@@ -163,7 +171,9 @@ function ProjectsPage() {
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-base font-semibold text-foreground">{p.name}</div>
+                      <div className="truncate text-base font-semibold text-foreground">
+                        {p.name}
+                      </div>
                       {p.customer_name && (
                         <div className="mt-0.5 truncate text-xs text-muted-foreground">
                           {p.customer_name}
@@ -183,7 +193,9 @@ function ProjectsPage() {
                       <Users size={12} /> {p.assigned_count} assigned
                     </span>
                     <span>
-                      {p.start_date ? `Starts ${new Date(p.start_date).toLocaleDateString()}` : "No start date"}
+                      {p.start_date
+                        ? `Starts ${new Date(p.start_date).toLocaleDateString()}`
+                        : "No start date"}
                     </span>
                   </div>
                   <div className="mt-1 text-[10px] text-muted-foreground/70">

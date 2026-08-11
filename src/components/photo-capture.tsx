@@ -318,10 +318,7 @@ export function PhotoCaptureSheet({
 
             {busy && (
               <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-background">
-                <div
-                  className="h-full bg-gold transition-all"
-                  style={{ width: `${progress}%` }}
-                />
+                <div className="h-full bg-gold transition-all" style={{ width: `${progress}%` }} />
               </div>
             )}
 

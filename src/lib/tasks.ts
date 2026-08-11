@@ -132,17 +132,19 @@ async function enrichTasks(rows: ProjectTask[]): Promise<TaskWithAssignee[]> {
   if (rows.length === 0) return [];
   const userIds = Array.from(
     new Set(
-      rows
-        .flatMap((r) => [r.assigned_to, r.created_by])
-        .filter((v): v is string => Boolean(v)),
+      rows.flatMap((r) => [r.assigned_to, r.created_by]).filter((v): v is string => Boolean(v)),
     ),
   );
   const { data: profs } = userIds.length
-    ? await supabase
-        .from("profiles")
-        .select("id, full_name, email, avatar_url")
-        .in("id", userIds)
-    : { data: [] as { id: string; full_name: string | null; email: string | null; avatar_url: string | null }[] };
+    ? await supabase.from("profiles").select("id, full_name, email, avatar_url").in("id", userIds)
+    : {
+        data: [] as {
+          id: string;
+          full_name: string | null;
+          email: string | null;
+          avatar_url: string | null;
+        }[],
+      };
   const byId = new Map((profs ?? []).map((p) => [p.id, p]));
   const nameOf = (id: string | null) => {
     if (!id) return null;
@@ -152,7 +154,7 @@ async function enrichTasks(rows: ProjectTask[]): Promise<TaskWithAssignee[]> {
   return rows.map((r) => ({
     ...r,
     assignee_name: nameOf(r.assigned_to),
-    assignee_avatar: r.assigned_to ? byId.get(r.assigned_to)?.avatar_url ?? null : null,
+    assignee_avatar: r.assigned_to ? (byId.get(r.assigned_to)?.avatar_url ?? null) : null,
     creator_name: nameOf(r.created_by),
   }));
 }
@@ -180,11 +182,7 @@ export async function createTask(input: CreateTaskInput): Promise<ProjectTask> {
     assigned_to: input.assigned_to || null,
     created_by: input.created_by,
   };
-  const { data, error } = await supabase
-    .from("project_tasks")
-    .insert(payload)
-    .select("*")
-    .single();
+  const { data, error } = await supabase.from("project_tasks").insert(payload).select("*").single();
   if (error) throw error;
   return data;
 }
@@ -196,7 +194,9 @@ export async function updateTaskStatus(id: string, status: TaskStatus): Promise<
 
 export async function updateTask(
   id: string,
-  patch: Partial<Pick<ProjectTask, "title" | "description" | "status" | "priority" | "due_date" | "assigned_to">>,
+  patch: Partial<
+    Pick<ProjectTask, "title" | "description" | "status" | "priority" | "due_date" | "assigned_to">
+  >,
 ): Promise<void> {
   const { error } = await supabase.from("project_tasks").update(patch).eq("id", id);
   if (error) throw error;

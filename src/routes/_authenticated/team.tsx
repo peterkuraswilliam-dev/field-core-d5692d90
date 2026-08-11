@@ -86,8 +86,7 @@ function TeamPage() {
       if (roleFilter !== "all" && m.role !== roleFilter) return false;
       if (!q) return true;
       return (
-        (m.full_name ?? "").toLowerCase().includes(q) ||
-        (m.email ?? "").toLowerCase().includes(q)
+        (m.full_name ?? "").toLowerCase().includes(q) || (m.email ?? "").toLowerCase().includes(q)
       );
     });
   }, [members, query, roleFilter]);
@@ -98,7 +97,10 @@ function TeamPage() {
     <div className="relative min-h-screen bg-background pb-20">
       <div className="mx-auto w-full max-w-md px-5 pt-6">
         <header className="flex items-center justify-between">
-          <Link to="/control-centre" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+          <Link
+            to="/control-centre"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          >
             <ArrowLeft size={16} /> Back
           </Link>
           {canInvite && (
@@ -118,7 +120,10 @@ function TeamPage() {
 
         <div className="mt-5 space-y-3">
           <div className="relative">
-            <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Search
+              size={16}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -221,7 +226,9 @@ function StatusPill({ status }: { status: MembershipStatus | "pending" }) {
   };
   const label = status === "pending" ? "Pending" : status[0].toUpperCase() + status.slice(1);
   return (
-    <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${map[status]}`}>
+    <span
+      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${map[status]}`}
+    >
       {label}
     </span>
   );
@@ -240,7 +247,11 @@ function MemberRow({
   return (
     <li className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3">
       {m.avatar_url ? (
-        <img src={m.avatar_url} alt={name} className="h-11 w-11 rounded-full border border-border object-cover" />
+        <img
+          src={m.avatar_url}
+          alt={name}
+          className="h-11 w-11 rounded-full border border-border object-cover"
+        />
       ) : (
         <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gold text-sm font-semibold text-gold-foreground">
           {initials(name)}

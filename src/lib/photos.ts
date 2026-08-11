@@ -98,9 +98,7 @@ export async function compressImage(file: File, maxEdge = 2000, quality = 0.82):
     if (!ctx) return file;
     ctx.drawImage(bitmap, 0, 0, w, h);
     bitmap.close?.();
-    const blob = await new Promise<Blob | null>((res) =>
-      canvas.toBlob(res, "image/jpeg", quality),
-    );
+    const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, "image/jpeg", quality));
     if (!blob || blob.size >= file.size) return file;
     const name = file.name.replace(/\.[^.]+$/, "") + ".jpg";
     return new File([blob], name, { type: "image/jpeg", lastModified: file.lastModified });
@@ -121,9 +119,10 @@ async function decorate(rows: ProjectPhoto[]): Promise<PhotoWithMeta[]> {
   const ids = Array.from(new Set(rows.map((r) => r.uploaded_by)));
   const [{ data: profs }, signed] = await Promise.all([
     supabase.from("profiles").select("id, full_name, email").in("id", ids),
-    supabase.storage
-      .from(PHOTO_BUCKET)
-      .createSignedUrls(rows.map((r) => r.storage_path), 60 * 60),
+    supabase.storage.from(PHOTO_BUCKET).createSignedUrls(
+      rows.map((r) => r.storage_path),
+      60 * 60,
+    ),
   ]);
   const nameById = new Map(
     (profs ?? []).map((p) => [p.id, p.full_name?.trim() || p.email?.split("@")[0] || "Member"]),

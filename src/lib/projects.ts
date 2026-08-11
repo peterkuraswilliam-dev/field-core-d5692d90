@@ -60,11 +60,7 @@ export function statusTone(s: ProjectStatus): string {
   }
 }
 
-export const NEEDS_ATTENTION_STATUSES: ProjectStatus[] = [
-  "enquiry",
-  "quote_required",
-  "waiting",
-];
+export const NEEDS_ATTENTION_STATUSES: ProjectStatus[] = ["enquiry", "quote_required", "waiting"];
 
 export function canCreateProjects(role: WorkspaceRole): boolean {
   return role === "owner" || role === "admin" || role === "project_manager";
@@ -138,7 +134,11 @@ export async function fetchProjectMembers(projectId: string): Promise<ProjectMem
   if (!pm || pm.length === 0) return [];
 
   const userIds = pm.map((m) => m.user_id);
-  const proj = await supabase.from("projects").select("workspace_id").eq("id", projectId).maybeSingle();
+  const proj = await supabase
+    .from("projects")
+    .select("workspace_id")
+    .eq("id", projectId)
+    .maybeSingle();
   const wsId = proj.data?.workspace_id;
 
   const [{ data: profiles }, { data: wm }] = await Promise.all([
@@ -186,8 +186,10 @@ export interface CreateProjectInput {
 
 export async function createProject(input: CreateProjectInput): Promise<Project> {
   const { assigned_user_ids, ...cols } = input;
+  const projectId = crypto.randomUUID();
   const clean = {
     ...cols,
+    id: projectId,
     customer_name: cols.customer_name || null,
     customer_email: cols.customer_email || null,
     customer_phone: cols.customer_phone || null,
@@ -196,19 +198,27 @@ export async function createProject(input: CreateProjectInput): Promise<Project>
     start_date: cols.start_date || null,
     expected_completion_date: cols.expected_completion_date || null,
   };
-  const { data, error } = await supabase.from("projects").insert(clean).select("*").single();
+  const { error } = await supabase.from("projects").insert(clean);
   if (error) throw error;
-  if (assigned_user_ids && assigned_user_ids.length > 0) {
-    await setProjectMembers(data.id, assigned_user_ids);
-  }
-  return data;
+
+  const memberIds = Array.from(new Set([input.created_by, ...(assigned_user_ids ?? [])]));
+  await setProjectMembers(projectId, memberIds);
+
+  const project = await fetchProject(projectId);
+  if (!project) throw new Error("The project was created but could not be loaded");
+  return project;
 }
 
 export async function updateProject(
   id: string,
   patch: Partial<Omit<Project, "id" | "workspace_id" | "created_by" | "created_at" | "updated_at">>,
 ): Promise<Project> {
-  const { data, error } = await supabase.from("projects").update(patch).eq("id", id).select("*").single();
+  const { data, error } = await supabase
+    .from("projects")
+    .update(patch)
+    .eq("id", id)
+    .select("*")
+    .single();
   if (error) throw error;
   return data;
 }

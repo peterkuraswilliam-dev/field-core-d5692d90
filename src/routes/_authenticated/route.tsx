@@ -8,7 +8,6 @@ import { canUploadPhotos } from "@/lib/photos";
 const WORKSPACE_EXEMPT = ["/admin", "/onboarding", "/blocked"];
 const HIDE_BOTTOM_NAV = ["/onboarding", "/blocked"];
 
-
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async ({ location }) => {
@@ -49,4 +48,3 @@ function AuthenticatedLayout() {
     </CameraProvider>
   );
 }
-

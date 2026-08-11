@@ -86,10 +86,7 @@ async function enrich(rows: ProjectActivity[]): Promise<ActivityEntry[]> {
     }
   }
   const { data: profs } = ids.size
-    ? await supabase
-        .from("profiles")
-        .select("id, full_name, email")
-        .in("id", Array.from(ids))
+    ? await supabase.from("profiles").select("id, full_name, email").in("id", Array.from(ids))
     : { data: [] as { id: string; full_name: string | null; email: string | null }[] };
   const byId = new Map((profs ?? []).map((p) => [p.id, p]));
   const nameOf = (id: string | null | undefined) => {

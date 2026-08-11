@@ -45,9 +45,20 @@ import { ProgressTab } from "@/components/project-tabs/ProgressTab";
 import { useCamera } from "@/components/camera-provider";
 import { canUploadPhotos, markProjectOpened } from "@/lib/photos";
 
-
 const projectSearch = z.object({
-  tab: z.enum(["overview", "tasks", "photos", "progress", "files", "calendar", "notes", "team", "activity"]).optional(),
+  tab: z
+    .enum([
+      "overview",
+      "tasks",
+      "photos",
+      "progress",
+      "files",
+      "calendar",
+      "notes",
+      "team",
+      "activity",
+    ])
+    .optional(),
   newProgress: z.boolean().optional(),
 });
 
@@ -63,7 +74,16 @@ export const Route = createFileRoute("/_authenticated/projects/$projectId")({
   component: ProjectDetail,
 });
 
-type Tab = "overview" | "tasks" | "photos" | "progress" | "files" | "calendar" | "notes" | "team" | "activity";
+type Tab =
+  | "overview"
+  | "tasks"
+  | "photos"
+  | "progress"
+  | "files"
+  | "calendar"
+  | "notes"
+  | "team"
+  | "activity";
 
 const TABS: { id: Tab; label: string; icon: React.ComponentType<{ size?: number }> }[] = [
   { id: "overview", label: "Overview", icon: Info },
@@ -90,7 +110,6 @@ function ProjectDetail() {
   const navigate = useNavigate();
   const camera = useCamera();
 
-
   const [project, setProject] = useState<Project | null | undefined>(undefined);
   const [members, setMembers] = useState<ProjectMemberRow[]>([]);
   const [tab, setTab] = useState<Tab>(search.tab ?? "overview");
@@ -113,10 +132,8 @@ function ProjectDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
 
-
   const isAssigned = members.some((m) => m.user_id === user.id);
-  const canManage =
-    hasWorkspaceWideAccess(role) || (role === "project_manager" && isAssigned);
+  const canManage = hasWorkspaceWideAccess(role) || (role === "project_manager" && isAssigned);
 
   if (project === undefined) {
     return <Centered>Loading project…</Centered>;
@@ -180,10 +197,7 @@ function ProjectDetail() {
         </div>
 
         {/* Contextual project nav */}
-        <nav
-          aria-label="Project sections"
-          className="mt-6 -mx-1 flex gap-1.5 overflow-x-auto pb-2"
-        >
+        <nav aria-label="Project sections" className="mt-6 -mx-1 flex gap-1.5 overflow-x-auto pb-2">
           {TABS.map((t) => {
             const Icon = t.icon;
             const active = tab === t.id;
@@ -273,7 +287,6 @@ function ProjectDetail() {
           )}
 
           {(tab === "files" || tab === "calendar") && <Placeholder tab={tab} />}
-
         </div>
       </div>
 
@@ -338,7 +351,10 @@ function Overview({ project, members }: { project: Project; members: ProjectMemb
             {project.customer_email && (
               <div className="flex items-start gap-2">
                 <Mail size={14} className="mt-0.5 text-muted-foreground" />
-                <a href={`mailto:${project.customer_email}`} className="text-foreground hover:text-gold">
+                <a
+                  href={`mailto:${project.customer_email}`}
+                  className="text-foreground hover:text-gold"
+                >
                   {project.customer_email}
                 </a>
               </div>
@@ -346,7 +362,10 @@ function Overview({ project, members }: { project: Project; members: ProjectMemb
             {project.customer_phone && (
               <div className="flex items-start gap-2">
                 <Phone size={14} className="mt-0.5 text-muted-foreground" />
-                <a href={`tel:${project.customer_phone}`} className="text-foreground hover:text-gold">
+                <a
+                  href={`tel:${project.customer_phone}`}
+                  className="text-foreground hover:text-gold"
+                >
                   {project.customer_phone}
                 </a>
               </div>
@@ -720,8 +739,7 @@ function AssignTeamModal({
     if (!q) return team;
     return team.filter(
       (m) =>
-        (m.full_name ?? "").toLowerCase().includes(q) ||
-        (m.email ?? "").toLowerCase().includes(q),
+        (m.full_name ?? "").toLowerCase().includes(q) || (m.email ?? "").toLowerCase().includes(q),
     );
   }, [team, query]);
 

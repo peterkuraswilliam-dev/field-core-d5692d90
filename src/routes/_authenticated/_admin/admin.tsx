@@ -79,9 +79,7 @@ function AdminDashboard() {
             <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-muted-foreground">
               <Users size={14} /> Admins
             </div>
-            <div className="mt-2 text-2xl font-semibold text-foreground">
-              {roleCount ?? "—"}
-            </div>
+            <div className="mt-2 text-2xl font-semibold text-foreground">{roleCount ?? "—"}</div>
           </div>
           <div className="rounded-2xl border border-border bg-surface p-4">
             <div className="text-xs uppercase tracking-widest text-muted-foreground">Role</div>

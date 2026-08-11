@@ -97,7 +97,6 @@ export function canManage(actor: WorkspaceRole, target: WorkspaceRole): boolean 
 
 export function allowedRolesFor(actor: WorkspaceRole): WorkspaceRole[] {
   if (actor === "owner") return INVITABLE_ROLES;
-  if (actor === "admin")
-    return ["project_manager", "field_worker", "contractor", "viewer"];
+  if (actor === "admin") return ["project_manager", "field_worker", "contractor", "viewer"];
   return [];
 }

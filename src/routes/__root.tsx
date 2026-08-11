@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
+  ClientOnly,
   Link,
   createRootRouteWithContext,
   useRouter,
@@ -141,7 +142,9 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <ServiceWorkerRegistration />
-      <Outlet />
+      <ClientOnly>
+        <Outlet />
+      </ClientOnly>
       <Toaster theme="dark" position="top-center" richColors />
     </QueryClientProvider>
   );

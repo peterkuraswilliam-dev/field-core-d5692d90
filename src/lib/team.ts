@@ -134,17 +134,15 @@ export async function previewInvitation(token: string) {
   const { data, error } = await supabase.rpc("preview_workspace_invitation", { _token: token });
   if (error) throw error;
   const row = Array.isArray(data) ? data[0] : data;
-  return row as
-    | {
-        invitation_id: string;
-        workspace_id: string;
-        workspace_name: string;
-        email: string;
-        role: WorkspaceRole;
-        status: string;
-        expires_at: string;
-      }
-    | null;
+  return row as {
+    invitation_id: string;
+    workspace_id: string;
+    workspace_name: string;
+    email: string;
+    role: WorkspaceRole;
+    status: string;
+    expires_at: string;
+  } | null;
 }
 
 export async function acceptInvitation(token: string): Promise<string> {

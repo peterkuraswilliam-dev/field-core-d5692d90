@@ -185,7 +185,13 @@ function TaskRow({
               : "border-border bg-surface-elevated text-muted-foreground hover:border-gold/50 hover:text-gold"
           } disabled:opacity-50`}
         >
-          {busy ? <Loader2 size={16} className="animate-spin" /> : done ? <Check size={18} /> : <Circle size={18} />}
+          {busy ? (
+            <Loader2 size={16} className="animate-spin" />
+          ) : done ? (
+            <Check size={18} />
+          ) : (
+            <Circle size={18} />
+          )}
         </button>
         <div className="min-w-0 flex-1">
           <div
@@ -202,7 +208,9 @@ function TaskRow({
             >
               {taskStatusLabel(task.status)}
             </span>
-            <span className={`text-[10px] font-semibold uppercase ${taskPriorityTone(task.priority)}`}>
+            <span
+              className={`text-[10px] font-semibold uppercase ${taskPriorityTone(task.priority)}`}
+            >
               {taskPriorityLabel(task.priority)}
             </span>
             {task.due_date && (
@@ -326,7 +334,9 @@ function NewTaskModal({
             onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
           />
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground/90">Description</label>
+            <label className="mb-1.5 block text-sm font-medium text-foreground/90">
+              Description
+            </label>
             <textarea
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
@@ -350,10 +360,14 @@ function NewTaskModal({
               </select>
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-foreground/90">Priority</label>
+              <label className="mb-1.5 block text-sm font-medium text-foreground/90">
+                Priority
+              </label>
               <select
                 value={form.priority}
-                onChange={(e) => setForm((f) => ({ ...f, priority: e.target.value as TaskPriority }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, priority: e.target.value as TaskPriority }))
+                }
                 className="w-full rounded-xl border border-border bg-input px-3 py-3 text-sm text-foreground outline-none focus:border-gold"
               >
                 {TASK_PRIORITIES.map((p) => (

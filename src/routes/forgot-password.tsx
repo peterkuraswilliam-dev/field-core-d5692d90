@@ -74,8 +74,8 @@ function ForgotPage() {
           </div>
           <h2 className="text-lg font-semibold">Check your inbox</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            If an account exists for <span className="text-foreground">{email}</span>, a reset
-            link is on the way.
+            If an account exists for <span className="text-foreground">{email}</span>, a reset link
+            is on the way.
           </p>
           <Link
             to="/auth"

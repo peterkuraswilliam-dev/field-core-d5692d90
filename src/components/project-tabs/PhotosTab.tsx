@@ -102,10 +102,7 @@ export function PhotosTab({
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {shown.map((p) => (
-            <div
-              key={p.id}
-              className="overflow-hidden rounded-2xl border border-border bg-surface"
-            >
+            <div key={p.id} className="overflow-hidden rounded-2xl border border-border bg-surface">
               <button
                 onClick={() => setViewing(p)}
                 className="block aspect-square w-full bg-background"
@@ -227,8 +224,7 @@ export function PhotosTab({
               {viewing.caption ? ` · ${viewing.caption}` : ""}
             </div>
             <div className="mt-1">
-              {viewing.uploader_name ?? "Member"} ·{" "}
-              {new Date(viewing.created_at).toLocaleString()}
+              {viewing.uploader_name ?? "Member"} · {new Date(viewing.created_at).toLocaleString()}
             </div>
           </div>
         </div>

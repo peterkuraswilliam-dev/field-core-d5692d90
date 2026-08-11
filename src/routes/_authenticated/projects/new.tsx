@@ -127,7 +127,9 @@ function NewProjectPage() {
       <div className="mx-auto w-full max-w-2xl px-5 pt-6">
         <BackLink to="/projects" />
         <div className="mt-4">
-          <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">New project</div>
+          <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+            New project
+          </div>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">Create project</h1>
         </div>
 
@@ -156,7 +158,9 @@ function NewProjectPage() {
               </select>
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-foreground/90">Description</label>
+              <label className="mb-1.5 block text-sm font-medium text-foreground/90">
+                Description
+              </label>
               <textarea
                 value={form.description}
                 onChange={(e) => set("description", e.target.value)}
@@ -192,7 +196,9 @@ function NewProjectPage() {
 
           <Section title="Job">
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-foreground/90">Job address</label>
+              <label className="mb-1.5 block text-sm font-medium text-foreground/90">
+                Job address
+              </label>
               <textarea
                 value={form.job_address}
                 onChange={(e) => set("job_address", e.target.value)}

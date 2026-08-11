@@ -1,8 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { fetchProjectPhotos, type PhotoWithMeta } from "@/lib/photos";
 import { fetchProjectTasks, type TaskWithAssignee } from "@/lib/tasks";
 
-const db = supabase as any;
+type ProgressUpdateRow = Database["public"]["Tables"]["project_progress_updates"]["Row"];
 
 export interface ProgressCorrection {
   id: string;
@@ -30,31 +31,46 @@ export interface ProgressUpdate {
   corrections: ProgressCorrection[];
 }
 
-async function decorateUpdates(rows: any[]): Promise<ProgressUpdate[]> {
+async function decorateUpdates(rows: ProgressUpdateRow[]): Promise<ProgressUpdate[]> {
   if (!rows.length) return [];
   const updateIds = rows.map((row) => row.id);
   const userIds = Array.from(new Set(rows.map((row) => row.created_by)));
   const projectIds = Array.from(new Set(rows.map((row) => row.project_id)));
-  const [{ data: profiles }, { data: projects }, { data: photoLinks }, { data: taskLinks }, { data: corrections }] =
-    await Promise.all([
-      db.from("profiles").select("id, full_name, email").in("id", userIds),
-      db.from("projects").select("id, name").in("id", projectIds),
-      db.from("project_progress_update_photos").select("update_id, photo_id").in("update_id", updateIds),
-      db.from("project_progress_update_tasks").select("update_id, task_id").in("update_id", updateIds),
-      db.from("project_progress_corrections").select("*").in("update_id", updateIds).order("created_at"),
-    ]);
+  const [
+    { data: profiles },
+    { data: projects },
+    { data: photoLinks },
+    { data: taskLinks },
+    { data: corrections },
+  ] = await Promise.all([
+    supabase.from("profiles").select("id, full_name, email").in("id", userIds),
+    supabase.from("projects").select("id, name").in("id", projectIds),
+    supabase
+      .from("project_progress_update_photos")
+      .select("update_id, photo_id")
+      .in("update_id", updateIds),
+    supabase
+      .from("project_progress_update_tasks")
+      .select("update_id, task_id")
+      .in("update_id", updateIds),
+    supabase
+      .from("project_progress_corrections")
+      .select("*")
+      .in("update_id", updateIds)
+      .order("created_at"),
+  ]);
 
-  const profileIds = Array.from(new Set((corrections ?? []).map((c: any) => c.created_by)));
+  const profileIds = Array.from(new Set((corrections ?? []).map((c) => c.created_by)));
   const { data: correctionProfiles } = profileIds.length
-    ? await db.from("profiles").select("id, full_name, email").in("id", profileIds)
+    ? await supabase.from("profiles").select("id, full_name, email").in("id", profileIds)
     : { data: [] };
   const names = new Map(
-    [...(profiles ?? []), ...(correctionProfiles ?? [])].map((p: any) => [
+    [...(profiles ?? []), ...(correctionProfiles ?? [])].map((p) => [
       p.id,
       p.full_name?.trim() || p.email?.split("@")[0] || "Member",
     ]),
   );
-  const projectNames = new Map((projects ?? []).map((p: any) => [p.id, p.name]));
+  const projectNames = new Map((projects ?? []).map((p) => [p.id, p.name]));
 
   const photosByProject = new Map<string, PhotoWithMeta[]>();
   const tasksByProject = new Map<string, TaskWithAssignee[]>();
@@ -71,10 +87,10 @@ async function decorateUpdates(rows: any[]): Promise<ProgressUpdate[]> {
 
   return rows.map((row) => {
     const photoIds = new Set(
-      (photoLinks ?? []).filter((l: any) => l.update_id === row.id).map((l: any) => l.photo_id),
+      (photoLinks ?? []).filter((l) => l.update_id === row.id).map((l) => l.photo_id),
     );
     const taskIds = new Set(
-      (taskLinks ?? []).filter((l: any) => l.update_id === row.id).map((l: any) => l.task_id),
+      (taskLinks ?? []).filter((l) => l.update_id === row.id).map((l) => l.task_id),
     );
     return {
       ...row,
@@ -83,15 +99,15 @@ async function decorateUpdates(rows: any[]): Promise<ProgressUpdate[]> {
       photos: (photosByProject.get(row.project_id) ?? []).filter((p) => photoIds.has(p.id)),
       tasks: (tasksByProject.get(row.project_id) ?? []).filter((t) => taskIds.has(t.id)),
       corrections: (corrections ?? [])
-        .filter((c: any) => c.update_id === row.id)
-        .map((c: any) => ({ ...c, author_name: names.get(c.created_by) ?? null })),
+        .filter((c) => c.update_id === row.id)
+        .map((c) => ({ ...c, author_name: names.get(c.created_by) ?? null })),
     } as ProgressUpdate;
   });
 }
 
 export async function fetchProjectProgressUpdates(projectId: string): Promise<ProgressUpdate[]> {
-  await db.rpc("sync_progress_update_locks", { _project_id: projectId });
-  const { data, error } = await db
+  await supabase.rpc("sync_progress_update_locks", { _project_id: projectId });
+  const { data, error } = await supabase
     .from("project_progress_updates")
     .select("*")
     .eq("project_id", projectId)
@@ -105,8 +121,8 @@ export async function fetchRecentProgressUpdates(
   workspaceId: string,
   limit = 5,
 ): Promise<ProgressUpdate[]> {
-  await db.rpc("sync_progress_update_locks", { _project_id: null });
-  const { data, error } = await db
+  await supabase.rpc("sync_progress_update_locks", { _project_id: null });
+  const { data, error } = await supabase
     .from("project_progress_updates")
     .select("*")
     .eq("workspace_id", workspaceId)
@@ -120,19 +136,19 @@ export async function fetchProgressStats(workspaceId: string, visibleProjectIds:
   const today = new Date().toISOString().slice(0, 10);
   const recentCutoff = new Date(Date.now() - 7 * 86400000).toISOString();
   const [{ count: todayCount }, { data: recentRows }, recent] = await Promise.all([
-    db
+    supabase
       .from("project_progress_updates")
       .select("id", { count: "exact", head: true })
       .eq("workspace_id", workspaceId)
       .eq("work_date", today),
-    db
+    supabase
       .from("project_progress_updates")
       .select("project_id")
       .eq("workspace_id", workspaceId)
       .gte("created_at", recentCutoff),
     fetchRecentProgressUpdates(workspaceId, 4),
   ]);
-  const recentProjectIds = new Set((recentRows ?? []).map((row: any) => row.project_id));
+  const recentProjectIds = new Set((recentRows ?? []).map((row) => row.project_id));
   return {
     today: todayCount ?? 0,
     withoutRecent: visibleProjectIds.filter((id) => !recentProjectIds.has(id)).length,
@@ -148,7 +164,7 @@ export async function submitProgressUpdate(input: {
   photoIds: string[];
   taskIds: string[];
 }) {
-  const { data, error } = await db.rpc("submit_progress_update", {
+  const { data, error } = await supabase.rpc("submit_progress_update", {
     _project_id: input.projectId,
     _summary: input.summary,
     _issues: input.issues || null,
@@ -164,7 +180,7 @@ export async function editProgressUpdate(
   id: string,
   patch: { summary: string; issues?: string; workDate: string },
 ) {
-  const { error } = await db.rpc("edit_progress_update", {
+  const { error } = await supabase.rpc("edit_progress_update", {
     _update_id: id,
     _summary: patch.summary,
     _issues: patch.issues || null,
@@ -174,7 +190,7 @@ export async function editProgressUpdate(
 }
 
 export async function addProgressCorrection(id: string, note: string) {
-  const { error } = await db.rpc("add_progress_correction", {
+  const { error } = await supabase.rpc("add_progress_correction", {
     _update_id: id,
     _note: note,
   });

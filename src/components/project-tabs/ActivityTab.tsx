@@ -1,11 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { initials } from "@/components/project-ui";
-import {
-  fetchProjectActivity,
-  humanActivity,
-  type ActivityEntry,
-} from "@/lib/activity";
+import { fetchProjectActivity, humanActivity, type ActivityEntry } from "@/lib/activity";
 
 export function ActivityTab({ projectId }: { projectId: string }) {
   const [rows, setRows] = useState<ActivityEntry[] | null>(null);
@@ -86,7 +82,8 @@ function detailFor(
     case "photo.caption_updated":
     case "photo.deleted": {
       const cat = typeof meta.category === "string" ? meta.category : null;
-      const count = typeof meta.count === "number" && meta.count > 1 ? `${meta.count} photos` : null;
+      const count =
+        typeof meta.count === "number" && meta.count > 1 ? `${meta.count} photos` : null;
       return [count, cat].filter(Boolean).join(" · ") || null;
     }
 

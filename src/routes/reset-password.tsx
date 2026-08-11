@@ -77,9 +77,7 @@ function ResetPage() {
       <div className="mt-10">
         <h1 className="text-3xl font-semibold tracking-tight">Set a new password</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {ready
-            ? "Choose a strong password you'll remember."
-            : "Verifying your reset link…"}
+          {ready ? "Choose a strong password you'll remember." : "Verifying your reset link…"}
         </p>
       </div>
 
