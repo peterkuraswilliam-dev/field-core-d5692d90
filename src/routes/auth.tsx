@@ -9,7 +9,13 @@ import { AuthShell, Button, Field } from "@/components/auth-ui";
 import { BrandLogo } from "@/components/brand-logo";
 import { AppInstallButton } from "@/components/app-install";
 
-const authSearch = z.object({ mode: z.enum(["signin", "signup"]).optional() });
+const authSearch = z.object({
+  mode: z.enum(["signin", "signup"]).optional(),
+  invite: z
+    .string()
+    .regex(/^[a-f0-9]{48}$/)
+    .optional(),
+});
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -22,9 +28,12 @@ export const Route = createFileRoute("/auth")({
       { property: "og:description", content: "Sign in to manage your projects and team." },
     ],
   }),
-  beforeLoad: async () => {
+  beforeLoad: async ({ search }) => {
     const { data } = await supabase.auth.getSession();
     if (data.session) {
+      if (search.invite) {
+        throw redirect({ to: "/accept-invite", search: { token: search.invite } });
+      }
       const admin = await isCurrentUserAdmin(data.session.user.id);
       throw redirect({ to: admin ? "/admin" : "/control-centre" });
     }
@@ -33,7 +42,7 @@ export const Route = createFileRoute("/auth")({
 });
 
 function AuthPage() {
-  const { mode } = useSearch({ from: "/auth" });
+  const { mode, invite } = useSearch({ from: "/auth" });
   const [tab, setTab] = useState<"signin" | "signup">(mode ?? "signin");
 
   return (
@@ -44,12 +53,18 @@ function AuthPage() {
 
       <div className="mt-10">
         <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-          {tab === "signin" ? "Welcome back" : "Create your account"}
+          {tab === "signin"
+            ? "Welcome back"
+            : invite
+              ? "Create your account to join"
+              : "Create your account"}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {tab === "signin"
             ? "Sign in to manage your projects and team."
-            : "Set up your workspace in under a minute."}
+            : invite
+              ? "Create an account with the invited email to join the workspace."
+              : "Set up your workspace in under a minute."}
         </p>
       </div>
 
@@ -70,7 +85,11 @@ function AuthPage() {
       </div>
 
       <div className="mt-6">
-        {tab === "signin" ? <SignInForm /> : <SignUpForm onSwitch={() => setTab("signin")} />}
+        {tab === "signin" ? (
+          <SignInForm invite={invite} />
+        ) : (
+          <SignUpForm invite={invite} onSwitch={() => setTab("signin")} />
+        )}
       </div>
       <div className="mt-5">
         <AppInstallButton />
@@ -87,7 +106,7 @@ const signInSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
-function SignInForm() {
+function SignInForm({ invite }: { invite?: string }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
@@ -118,7 +137,11 @@ function SignInForm() {
       return;
     }
     toast.success("Signed in");
-    navigate({ to: "/" });
+    if (invite) {
+      navigate({ to: "/accept-invite", search: { token: invite } });
+    } else {
+      navigate({ to: "/" });
+    }
   };
 
   return (
@@ -184,7 +207,7 @@ const signUpSchema = z
     message: "Passwords do not match",
   });
 
-function SignUpForm({ onSwitch }: { onSwitch: () => void }) {
+function SignUpForm({ invite, onSwitch }: { invite?: string; onSwitch: () => void }) {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -223,11 +246,14 @@ function SignUpForm({ onSwitch }: { onSwitch: () => void }) {
     }
     setErrors({});
     setLoading(true);
+    const verificationUrl = invite
+      ? `${window.location.origin}/accept-invite?token=${encodeURIComponent(invite)}`
+      : `${window.location.origin}/`;
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/`,
+        emailRedirectTo: verificationUrl,
         data: { full_name: fullName },
       },
     });
@@ -235,7 +261,9 @@ function SignUpForm({ onSwitch }: { onSwitch: () => void }) {
     if (error) {
       const msg = /already/i.test(error.message)
         ? "That email is already registered."
-        : error.message;
+        : /rate limit/i.test(error.message)
+          ? "Email delivery is temporarily busy. Wait a few minutes, then try again or ask your workspace admin for help."
+          : error.message;
       toast.error(msg);
       return;
     }
@@ -244,7 +272,7 @@ function SignUpForm({ onSwitch }: { onSwitch: () => void }) {
       toast.success("Verification email sent");
     } else {
       toast.success("Account created");
-      window.location.href = "/";
+      window.location.href = invite ? `/accept-invite?token=${encodeURIComponent(invite)}` : "/";
     }
   };
 

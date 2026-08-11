@@ -63,7 +63,7 @@ function AcceptInvite() {
 
   const goSignIn = () => {
     if (token) sessionStorage.setItem("pending_invite_token", token);
-    navigate({ to: "/auth" });
+    navigate({ to: "/auth", search: token ? { invite: token } : {} });
   };
 
   const accept = async () => {
@@ -151,7 +151,7 @@ function AcceptInvite() {
       </div>
 
       <div className="mt-6 text-center text-sm text-muted-foreground">
-        <Link to="/auth" className="hover:text-foreground">
+        <Link to="/auth" search={token ? { invite: token } : {}} className="hover:text-foreground">
           Back to sign in
         </Link>
       </div>
